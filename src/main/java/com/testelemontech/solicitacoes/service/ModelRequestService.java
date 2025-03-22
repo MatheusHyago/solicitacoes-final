@@ -1,15 +1,14 @@
 package com.testelemontech.solicitacoes.service;
 
+import com.testelemontech.solicitacoes.config.WsClient;
 import com.testelemontech.solicitacoes.model.ModelRequest;
 import com.testelemontech.solicitacoes.repository.ModelRequestRepository;
-import com.testelemontech.solicitacoes.config.SoapConfig;
 import com.testelemontech.solicitacoes.wsdl.PesquisarSolicitacaoRequest;
-import com.testelemontech.solicitacoes.wsdl.PesquisarSolicitacaoResponse;
-import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.ws.client.core.WebServiceTemplate;
 
+import javax.annotation.PostConstruct;
 import java.util.List;
 import java.util.Optional;
 
@@ -20,10 +19,10 @@ public class ModelRequestService {
     private ModelRequestRepository modelRequestRepository;
 
     @Autowired
-    private SoapConfig soapConfig;
+    private WsClient wsClient;
 
-    @Autowired
-    private WebServiceTemplate webServiceTemplate;
+    @Value("${soap.keyClient}")
+    private String keyClient;
 
     public ModelRequest salvarSolicitacao(ModelRequest modelRequest) {
         return modelRequestRepository.save(modelRequest);
@@ -44,12 +43,9 @@ public class ModelRequestService {
     public void buscarESalvarProdutosAereos() {
         try {
             PesquisarSolicitacaoRequest request = new PesquisarSolicitacaoRequest();
-            soapConfig.enviarComCabecalho(webServiceTemplate, request);
+            request.setChaveCliente(keyClient); // Ajuste conforme necessário
 
-            PesquisarSolicitacaoResponse response = (PesquisarSolicitacaoResponse) webServiceTemplate.marshalSendAndReceive(
-                    soapConfig.getWsdlUrl(), request);
-
-            List<ModelRequest> produtosAereos = converterParaModelRequest(response);
+            List<ModelRequest> produtosAereos = wsClient.buscarProdutosAereos(request);
 
             if (!produtosAereos.isEmpty()) {
                 modelRequestRepository.saveAll(produtosAereos);
@@ -60,11 +56,6 @@ public class ModelRequestService {
         } catch (Exception e) {
             System.err.println("❌ Erro ao buscar produtos aéreos via SOAP: " + e.getMessage());
         }
-    }
-
-    private List<ModelRequest> converterParaModelRequest(PesquisarSolicitacaoResponse response) {
-        // Implementar a lógica de conversão aqui
-        return null; // Substituir pela lista convertida de ModelRequest
     }
 
     @PostConstruct

@@ -1,16 +1,17 @@
 package com.testelemontech.solicitacoes.model;
 
+
 import jakarta.persistence.*;
+
 import java.time.LocalDateTime;
 
-@Entity  // Indica que esta classe é uma entidade gerenciada pelo JPA
-@Table(name = "model_request") // Define o nome da tabela no banco de dados
+@Entity
+@Table(name = "model_requests")
 public class ModelRequest {
 
-    @Id // Define a chave primária
-    @GeneratedValue(strategy = GenerationType.IDENTITY) // Geração automática do ID
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
     private String nomePassageiro;
     private String ciaAerea;
     private LocalDateTime dataHoraSaida;
@@ -18,27 +19,63 @@ public class ModelRequest {
     private String cidadeOrigem;
     private String cidadeDestino;
 
-    // Getters e setters
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    // Getters e Setters
 
-    public String getNomePassageiro() { return nomePassageiro; }
-    public void setNomePassageiro(String nomePassageiro) { this.nomePassageiro = nomePassageiro; }
+    public Long getId() {
+        return id;
+    }
 
-    public String getCiaAerea() { return ciaAerea; }
-    public void setCiaAerea(String ciaAerea) { this.ciaAerea = ciaAerea; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public LocalDateTime getDataHoraSaida() { return dataHoraSaida; }
-    public void setDataHoraSaida(LocalDateTime dataHoraSaida) { this.dataHoraSaida = dataHoraSaida; }
+    public String getNomePassageiro() {
+        return nomePassageiro;
+    }
 
-    public LocalDateTime getDataHoraChegada() { return dataHoraChegada; }
-    public void setDataHoraChegada(LocalDateTime dataHoraChegada) { this.dataHoraChegada = dataHoraChegada; }
+    public void setNomePassageiro(String nomePassageiro) {
+        this.nomePassageiro = nomePassageiro;
+    }
 
-    public String getCidadeOrigem() { return cidadeOrigem; }
-    public void setCidadeOrigem(String cidadeOrigem) { this.cidadeOrigem = cidadeOrigem; }
+    public String getCiaAerea() {
+        return ciaAerea;
+    }
 
-    public String getCidadeDestino() { return cidadeDestino; }
-    public void setCidadeDestino(String cidadeDestino) { this.cidadeDestino = cidadeDestino; }
+    public void setCiaAerea(String ciaAerea) {
+        this.ciaAerea = ciaAerea;
+    }
+
+    public LocalDateTime getDataHoraSaida() {
+        return dataHoraSaida;
+    }
+
+    public void setDataHoraSaida(LocalDateTime dataHoraSaida) {
+        this.dataHoraSaida = dataHoraSaida;
+    }
+
+    public LocalDateTime getDataHoraChegada() {
+        return dataHoraChegada;
+    }
+
+    public void setDataHoraChegada(LocalDateTime dataHoraChegada) {
+        this.dataHoraChegada = dataHoraChegada;
+    }
+
+    public String getCidadeOrigem() {
+        return cidadeOrigem;
+    }
+
+    public void setCidadeOrigem(String cidadeOrigem) {
+        this.cidadeOrigem = cidadeOrigem;
+    }
+
+    public String getCidadeDestino() {
+        return cidadeDestino;
+    }
+
+    public void setCidadeDestino(String cidadeDestino) {
+        this.cidadeDestino = cidadeDestino;
+    }
 
     @Override
     public String toString() {

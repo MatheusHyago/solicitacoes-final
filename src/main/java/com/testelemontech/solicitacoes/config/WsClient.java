@@ -3,8 +3,6 @@ package com.testelemontech.solicitacoes.config;
 import com.testelemontech.solicitacoes.model.ModelRequest;
 import com.testelemontech.solicitacoes.wsdl.PesquisarSolicitacaoRequest;
 import com.testelemontech.solicitacoes.wsdl.PesquisarSolicitacaoResponse;
-import jakarta.xml.bind.JAXBElement;
-import javax.xml.namespace.QName;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.ws.client.core.WebServiceTemplate;
@@ -12,6 +10,7 @@ import org.springframework.ws.client.core.WebServiceMessageCallback;
 import org.springframework.ws.soap.SoapMessage;
 import org.springframework.ws.soap.SoapHeader;
 
+import javax.xml.namespace.QName;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -34,11 +33,10 @@ public class WsClient {
     @Value("${soap.keyClient}")
     private String keyClient;
 
-    // Username para a autenticação
+    // Username e Password para autenticação
     @Value("${soap.username}")
     private String username;
 
-    // Password para a autenticação
     @Value("${soap.password}")
     private String password;
 
@@ -51,33 +49,27 @@ public class WsClient {
      *
      * @return Lista de ModelRequest contendo os dados das solicitações.
      */
-    public List<ModelRequest> buscarProdutosAereos() {
+    public List<ModelRequest> buscarProdutosAereos(PesquisarSolicitacaoRequest request) {
         try {
             logger.info("📄 Iniciando requisição SOAP para {}", wsdlUrl);
 
-            // Criando o objeto de requisição
-            PesquisarSolicitacaoRequest request = new PesquisarSolicitacaoRequest();
-
             // Adicionando a chave do cliente no corpo da requisição
-            JAXBElement<String> chaveClienteElement = new JAXBElement<>(
-                    new QName("http://lemontech.com.br/selfbooking/wsselfbooking/services/request", "chaveCliente"),
-                    String.class,
-                    keyClient
-            );
-            request.getContent().add(chaveClienteElement);
+            request.setChaveCliente(keyClient);
 
-            // Callback para adicionar a chave no cabeçalho SOAP
+            // Callback para adicionar o cabeçalho SOAP
             WebServiceMessageCallback callback = message -> {
                 SoapMessage soapMessage = (SoapMessage) message;
                 SoapHeader soapHeader = soapMessage.getSoapHeader();
 
-                // Criando e adicionando o cabeçalho SOAP
-                soapHeader.addHeaderElement(new QName("http://lemontech.com.br/selfbooking/wsselfbooking/services/request", "username"))
-                        .setText(username);
-                soapHeader.addHeaderElement(new QName("http://lemontech.com.br/selfbooking/wsselfbooking/services/request", "password"))
-                        .setText(password);
-                soapHeader.addHeaderElement(new QName("http://lemontech.com.br/selfbooking/wsselfbooking/services/request", "keyClient"))
-                        .setText(keyClient);
+                // Adicionando elementos no cabeçalho SOAP
+                QName keyClientQName = new QName("http://lemontech.com.br/selfbooking/wsselfbooking/services/request", "chaveCliente");
+                soapHeader.addHeaderElement(keyClientQName).setText(keyClient);
+
+                QName usernameQName = new QName("http://lemontech.com.br/selfbooking/wsselfbooking/services/request", "username");
+                soapHeader.addHeaderElement(usernameQName).setText(username);
+
+                QName passwordQName = new QName("http://lemontech.com.br/selfbooking/wsselfbooking/services/request", "password");
+                soapHeader.addHeaderElement(passwordQName).setText(password);
             };
 
             // Enviando a requisição SOAP com o callback do cabeçalho
@@ -124,10 +116,15 @@ public class WsClient {
                                     model.setDataHoraSaida(solicitacao.getAereos().getAereo().get(0).getAereoSeguimento().get(0).getDataSaida()
                                             .toGregorianCalendar().toZonedDateTime().toLocalDateTime());
                                 }
+                                if (solicitacao.getAereos().getAereo().get(0).getAereoSeguimento().get(0).getDataChegada() != null) {
+                                    model.setDataHoraChegada(solicitacao.getAereos().getAereo().get(0).getAereoSeguimento().get(0).getDataChegada()
+                                            .toGregorianCalendar().toZonedDateTime().toLocalDateTime());
+                                }
                             } catch (Exception e) {
-                                logger.warn("⚠️ Erro ao converter data de saída para a solicitação '{}': {}",
+                                logger.warn("⚠️ Erro ao converter datas para a solicitação '{}': {}",
                                         solicitacao.getPassageiros().getPassageiro().get(0).getNome(), e.getMessage());
                                 model.setDataHoraSaida(null);
+                                model.setDataHoraChegada(null);
                             }
                         }
                     }
