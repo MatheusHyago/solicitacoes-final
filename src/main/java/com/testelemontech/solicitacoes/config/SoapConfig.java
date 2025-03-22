@@ -71,12 +71,10 @@ public class SoapConfig {
 
     @Bean
     public WebServiceTemplate webServiceTemplate(Jaxb2Marshaller marshaller) throws SOAPException {
-        MessageFactory messageFactory = MessageFactory.newInstance();
-        SaajSoapMessageFactory soapMessageFactory = new SaajSoapMessageFactory(messageFactory);
-        soapMessageFactory.afterPropertiesSet();
+        SaajSoapMessageFactory messageFactory = new SaajSoapMessageFactory(MessageFactory.newInstance());
+        messageFactory.afterPropertiesSet();
 
-        WebServiceTemplate webServiceTemplate = new WebServiceTemplate();
-        webServiceTemplate.setMessageFactory(soapMessageFactory);
+        WebServiceTemplate webServiceTemplate = new WebServiceTemplate(messageFactory);
         webServiceTemplate.setMarshaller(marshaller);
         webServiceTemplate.setUnmarshaller(marshaller);
         webServiceTemplate.setMessageSender(messageSender());
@@ -92,11 +90,19 @@ public class SoapConfig {
 
                 soapHeader.addHeaderElement(new QName("http://lemontech.com.br/selfbooking/wsselfbooking/services/request", "keyClient"))
                         .setText(keyClient);
+                soapHeader.addHeaderElement(new QName("http://lemontech.com.br/selfbooking/wsselfbooking/services/request", "username"))
+                        .setText(username);
+                soapHeader.addHeaderElement(new QName("http://lemontech.com.br/selfbooking/wsselfbooking/services/request", "password"))
+                        .setText(password);
             } else {
                 throw new IllegalArgumentException("Mensagem não é do tipo SoapMessage");
             }
         };
 
         webServiceTemplate.marshalSendAndReceive(wsdlUrl, request, callback);
+    }
+
+    public String getWsdlUrl() {
+        return wsdlUrl;
     }
 }

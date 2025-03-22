@@ -34,6 +34,14 @@ public class WsClient {
     @Value("${soap.keyClient}")
     private String keyClient;
 
+    // Username para a autenticação
+    @Value("${soap.username}")
+    private String username;
+
+    // Password para a autenticação
+    @Value("${soap.password}")
+    private String password;
+
     public WsClient(WebServiceTemplate webServiceTemplate) {
         this.webServiceTemplate = webServiceTemplate;
     }
@@ -64,7 +72,11 @@ public class WsClient {
                 SoapHeader soapHeader = soapMessage.getSoapHeader();
 
                 // Criando e adicionando o cabeçalho SOAP
-                soapHeader.addHeaderElement(new QName("http://lemontech.com.br/selfbooking/wsselfbooking/services/request", "chaveCliente"))
+                soapHeader.addHeaderElement(new QName("http://lemontech.com.br/selfbooking/wsselfbooking/services/request", "username"))
+                        .setText(username);
+                soapHeader.addHeaderElement(new QName("http://lemontech.com.br/selfbooking/wsselfbooking/services/request", "password"))
+                        .setText(password);
+                soapHeader.addHeaderElement(new QName("http://lemontech.com.br/selfbooking/wsselfbooking/services/request", "keyClient"))
                         .setText(keyClient);
             };
 
