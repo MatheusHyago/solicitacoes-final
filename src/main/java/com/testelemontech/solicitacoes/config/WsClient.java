@@ -10,14 +10,11 @@ import org.springframework.ws.client.core.WebServiceMessageCallback;
 import org.springframework.ws.soap.SoapMessage;
 import org.springframework.ws.soap.SoapHeader;
 
-import javax.xml.namespace.QName;
-import java.time.format.DateTimeFormatter;
-import java.util.List;
-import java.util.stream.Collectors;
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
-
-// SLF4J para logs
+import java.util.List;
+import java.util.stream.Collectors;
+import javax.xml.namespace.QName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,15 +24,12 @@ public class WsClient {
     private static final Logger logger = LoggerFactory.getLogger(WsClient.class);
     private final WebServiceTemplate webServiceTemplate;
 
-    // URL do serviço SOAP definida no application.properties
     @Value("${soap.wsdlUrl}")
     private String wsdlUrl;
 
-    // Chave do cliente para autenticação no cabeçalho SOAP
     @Value("${soap.keyClient}")
     private String keyClient;
 
-    // Username e Password para autenticação
     @Value("${soap.username}")
     private String username;
 
@@ -44,55 +38,53 @@ public class WsClient {
 
     public WsClient(WebServiceTemplate webServiceTemplate) {
         this.webServiceTemplate = webServiceTemplate;
+        this.webServiceTemplate.setFaultMessageResolver(new CustomSoapFaultMessageResolver());
     }
 
-    /**
-     * Método responsável por fazer a requisição SOAP para buscar as solicitações de viagem.
-     *
-     * @return Lista de ModelRequest contendo os dados das solicitações.
-     */
     public List<ModelRequest> buscarProdutosAereos(PesquisarSolicitacaoRequest request) {
         try {
-            logger.info("📄 Iniciando requisição SOAP para {}", wsdlUrl);
+            logger.info("🔍 Iniciando requisição SOAP para {}", wsdlUrl);
+            logger.info("🔑 Credenciais: keyClient={}, username={}, password={}", keyClient, username, password);
 
-            // Adicionando a chave do cliente no corpo da requisição
+            if (keyClient == null || username == null || password == null) {
+                logger.error("❌ Credenciais inválidas! Verifique application.properties");
+                throw new RuntimeException("Credenciais SOAP estão nulas!");
+            }
+
             request.setChaveCliente(keyClient);
 
-            // Callback para adicionar o cabeçalho SOAP
             WebServiceMessageCallback callback = message -> {
                 SoapMessage soapMessage = (SoapMessage) message;
                 SoapHeader soapHeader = soapMessage.getSoapHeader();
 
-                // Adicionando elementos no cabeçalho SOAP
-                QName keyClientQName = new QName("http://lemontech.com.br/selfbooking/wsselfbooking/services/request", "chaveCliente");
-                soapHeader.addHeaderElement(keyClientQName).setText(keyClient);
+                if (soapHeader == null) {
+                    logger.error("❌ SOAP Header está nulo! Verifique a implementação.");
+                    throw new RuntimeException("SOAP Header está nulo!");
+                }
 
-                QName usernameQName = new QName("http://lemontech.com.br/selfbooking/wsselfbooking/services/request", "username");
-                soapHeader.addHeaderElement(usernameQName).setText(username);
+                // Adicionando os elementos no cabeçalho SOAP com namespace correto
+                addSoapHeaderElement(soapHeader, "keyClient", keyClient);
+                addSoapHeaderElement(soapHeader, "userName", username);
+                addSoapHeaderElement(soapHeader, "userPassword", password);
 
-                QName passwordQName = new QName("http://lemontech.com.br/selfbooking/wsselfbooking/services/request", "password");
-                soapHeader.addHeaderElement(passwordQName).setText(password);
-
-                logger.info("📝 Cabeçalho SOAP configurado: chaveCliente={}, username={}, password={}", keyClient, username, password);
-
-                // Log da Mensagem SOAP completa
+                // Log da mensagem SOAP antes do envio
                 ByteArrayOutputStream out = new ByteArrayOutputStream();
                 soapMessage.writeTo(out);
-                logger.info("🔍 Mensagem SOAP enviada: {}", out.toString(StandardCharsets.UTF_8));
+                logger.info("📨 Mensagem SOAP enviada:\n{}", out.toString(StandardCharsets.UTF_8));
             };
 
-            // Enviando a requisição SOAP com o callback do cabeçalho
+            if (webServiceTemplate == null) {
+                logger.error("❌ WebServiceTemplate não foi injetado corretamente.");
+                throw new RuntimeException("WebServiceTemplate não foi injetado corretamente.");
+            }
+
+            // Enviando a requisição
             PesquisarSolicitacaoResponse response = (PesquisarSolicitacaoResponse) webServiceTemplate
                     .marshalSendAndReceive(wsdlUrl, request, callback);
 
             logger.info("✅ Resposta SOAP recebida com sucesso!");
 
-            // Log da Resposta SOAP
-            if (response != null) {
-                logger.info("🔍 Resposta SOAP: {}", response);
-            }
-
-            if (response.getSolicitacao() == null || response.getSolicitacao().isEmpty()) {
+            if (response == null || response.getSolicitacao() == null || response.getSolicitacao().isEmpty()) {
                 logger.warn("⚠️ Nenhuma solicitação de viagem encontrada!");
                 return List.of();
             }
@@ -104,15 +96,21 @@ public class WsClient {
         }
     }
 
-    /**
-     * Converte os dados da resposta SOAP para objetos ModelRequest.
-     *
-     * @param response Resposta SOAP recebida do serviço.
-     * @return Lista de ModelRequest com os dados convertidos.
-     */
-    private List<ModelRequest> converterParaModelRequest(PesquisarSolicitacaoResponse response) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
+    private void addSoapHeaderElement(SoapHeader soapHeader, String name, String value) {
+        try {
+            // Namespace conforme definido no WSDL
+            String namespace = "http://lemontech.com.br/selfbooking/wsselfbooking/services";
+            QName qName = new QName(namespace, name, "ser");
+            soapHeader.addHeaderElement(qName).setText(value);
 
+            logger.info("✅ Cabeçalho SOAP atualizado -> {} = {}", name, value);
+        } catch (Exception e) {
+            logger.error("❌ Erro ao adicionar elemento ao cabeçalho SOAP: {}", e.getMessage(), e);
+            throw new RuntimeException("Erro ao adicionar elemento ao cabeçalho SOAP", e);
+        }
+    }
+
+    private List<ModelRequest> converterParaModelRequest(PesquisarSolicitacaoResponse response) {
         return response.getSolicitacao()
                 .stream()
                 .map(solicitacao -> {
