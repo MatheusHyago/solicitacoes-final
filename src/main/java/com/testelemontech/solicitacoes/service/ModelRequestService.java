@@ -1,92 +1,57 @@
 package com.testelemontech.solicitacoes.service;
 
-import com.testelemontech.solicitacoes.config.WsClient;
 import com.testelemontech.solicitacoes.model.ModelRequest;
 import com.testelemontech.solicitacoes.repository.ModelRequestRepository;
-import com.testelemontech.solicitacoes.wsdl.PesquisarSolicitacaoRequest;
-import com.testelemontech.solicitacoes.wsdl.TipoSolicitacao;
+import com.testelemontech.solicitacoes.config.WsClient;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import javax.annotation.PostConstruct;
-import javax.xml.datatype.DatatypeFactory;
-import javax.xml.datatype.XMLGregorianCalendar;
-import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Optional;
 
 @Service
 public class ModelRequestService {
 
-    private static final Logger logger = LoggerFactory.getLogger(ModelRequestService.class);
-
     @Autowired
     private ModelRequestRepository modelRequestRepository;
 
     @Autowired
-    private WsClient wsClient;
+    private WsClient wsClient; // Cliente que consome a API SOAP
 
-    @Value("${soap.keyClient}")
-    private String keyClient;
-
+    // Método para salvar uma nova solicitação de viagem manualmente
     public ModelRequest salvarSolicitacao(ModelRequest modelRequest) {
         return modelRequestRepository.save(modelRequest);
     }
 
+    // Método para buscar todas as solicitações salvas no banco
     public List<ModelRequest> buscarTodasSolicitacoes() {
         return modelRequestRepository.findAll();
     }
 
+    // Método para buscar uma solicitação por ID
     public Optional<ModelRequest> buscarSolicitacaoPorId(Long id) {
         return modelRequestRepository.findById(id);
     }
 
+    // Método para excluir uma solicitação por ID
     public void excluirSolicitacao(Long id) {
         modelRequestRepository.deleteById(id);
     }
 
+    // Método para buscar os produtos Aéreos da API SOAP e salvar no banco automaticamente
     public void buscarESalvarProdutosAereos() {
-        try {
-            logger.info("Iniciando busca e salvamento de produtos aéreos com keyClient: {}", keyClient);
+        List<ModelRequest> produtosAereos = wsClient.buscarProdutosAereos(); // Chama a API SOAP
 
-            PesquisarSolicitacaoRequest request = new PesquisarSolicitacaoRequest();
-            request.setChaveCliente(keyClient);
-
-            // Definindo os valores dos filtros
-            request.setVersion("2.3.1");
-
-            GregorianCalendar dataInicial = new GregorianCalendar(2024, 11, 14, 0, 0, 0);
-            XMLGregorianCalendar xmlDataInicial = DatatypeFactory.newInstance().newXMLGregorianCalendar(dataInicial);
-            request.setDataInicial(xmlDataInicial);
-
-            GregorianCalendar dataFinal = new GregorianCalendar(2025, 2, 1, 0, 0, 0);
-            XMLGregorianCalendar xmlDataFinal = DatatypeFactory.newInstance().newXMLGregorianCalendar(dataFinal);
-            request.setDataFinal(xmlDataFinal);
-
-            request.setRegistroInicial(1);
-            request.setQuantidadeRegistros(50);
-            request.setSincronizado(false);
-            request.setExibirRemarks(true);
-            request.setExibirAprovadas(false);
-            request.setTipoSolicitacao(TipoSolicitacao.TODOS);
-
-            // Chamando o WebService
-            List<ModelRequest> produtosAereos = wsClient.buscarProdutosAereos(request);
-
-            if (!produtosAereos.isEmpty()) {
-                modelRequestRepository.saveAll(produtosAereos);
-                logger.info("✅ Produtos Aéreos salvos no banco!");
-            } else {
-                logger.warn("⚠️ Nenhum produto aéreo encontrado.");
-            }
-        } catch (Exception e) {
-            logger.error("❌ Erro ao buscar produtos aéreos via SOAP: {}", e.getMessage(), e);
+        if (!produtosAereos.isEmpty()) {
+            modelRequestRepository.saveAll(produtosAereos); // Salva os dados no banco
+            System.out.println("✅ Produtos Aéreos salvos no banco!");
+        } else {
+            System.out.println("⚠️ Nenhum produto aéreo encontrado.");
         }
     }
 
+    // Chamar o método automaticamente ao iniciar a aplicação
     @PostConstruct
     public void init() {
         buscarESalvarProdutosAereos();
