@@ -14,6 +14,8 @@ import javax.xml.namespace.QName;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.io.ByteArrayOutputStream;
+import java.nio.charset.StandardCharsets;
 
 // SLF4J para logs
 import org.slf4j.Logger;
@@ -70,6 +72,13 @@ public class WsClient {
 
                 QName passwordQName = new QName("http://lemontech.com.br/selfbooking/wsselfbooking/services/request", "password");
                 soapHeader.addHeaderElement(passwordQName).setText(password);
+
+                logger.info("📝 Cabeçalho SOAP configurado: chaveCliente={}, username={}, password={}", keyClient, username, password);
+
+                // Log da Mensagem SOAP completa
+                ByteArrayOutputStream out = new ByteArrayOutputStream();
+                soapMessage.writeTo(out);
+                logger.info("🔍 Mensagem SOAP enviada: {}", out.toString(StandardCharsets.UTF_8));
             };
 
             // Enviando a requisição SOAP com o callback do cabeçalho
@@ -77,6 +86,11 @@ public class WsClient {
                     .marshalSendAndReceive(wsdlUrl, request, callback);
 
             logger.info("✅ Resposta SOAP recebida com sucesso!");
+
+            // Log da Resposta SOAP
+            if (response != null) {
+                logger.info("🔍 Resposta SOAP: {}", response);
+            }
 
             if (response.getSolicitacao() == null || response.getSolicitacao().isEmpty()) {
                 logger.warn("⚠️ Nenhuma solicitação de viagem encontrada!");

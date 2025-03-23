@@ -43,8 +43,9 @@ public class ModelRequestService {
     public void buscarESalvarProdutosAereos() {
         try {
             PesquisarSolicitacaoRequest request = new PesquisarSolicitacaoRequest();
-            request.setChaveCliente(keyClient); // Ajuste conforme necessário
+            request.setChaveCliente(keyClient);
 
+            // Garantir que o retorno é do tipo List<ModelRequest>
             List<ModelRequest> produtosAereos = wsClient.buscarProdutosAereos(request);
 
             if (!produtosAereos.isEmpty()) {
