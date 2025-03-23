@@ -2,13 +2,13 @@ package com.testelemontech.solicitacoes.service;
 
 import com.testelemontech.solicitacoes.model.ModelRequest;
 import com.testelemontech.solicitacoes.repository.ModelRequestRepository;
-import com.testelemontech.solicitacoes.config.WsClient;
-import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.time.LocalDateTime; // Importando LocalDateTime
 
 @Service
 public class ModelRequestService {
@@ -16,10 +16,7 @@ public class ModelRequestService {
     @Autowired
     private ModelRequestRepository modelRequestRepository;
 
-    @Autowired
-    private WsClient wsClient; // Cliente que consome a API SOAP
-
-    // Método para salvar uma nova solicitação de viagem manualmente
+    // Método para salvar uma nova solicitação de viagem
     public ModelRequest salvarSolicitacao(ModelRequest modelRequest) {
         return modelRequestRepository.save(modelRequest);
     }
@@ -39,21 +36,32 @@ public class ModelRequestService {
         modelRequestRepository.deleteById(id);
     }
 
-    // Método para buscar os produtos Aéreos da API SOAP e salvar no banco automaticamente
-    public void buscarESalvarProdutosAereos() {
-        List<ModelRequest> produtosAereos = wsClient.buscarProdutosAereos(); // Chama a API SOAP
+    // Método para gerar uma lista cheia de ModelRequests fictícias
+    public List<ModelRequest> gerarSolicitacoesCheias() {
+        List<ModelRequest> modelRequests = new ArrayList<>(); // Importando ArrayList
 
-        if (!produtosAereos.isEmpty()) {
-            modelRequestRepository.saveAll(produtosAereos); // Salva os dados no banco
-            System.out.println("✅ Produtos Aéreos salvos no banco!");
-        } else {
-            System.out.println("⚠️ Nenhum produto aéreo encontrado.");
+        // Gerar 10 solicitações fictícias
+        for (int i = 1; i <= 10; i++) {
+            ModelRequest modelRequest = new ModelRequest();
+            modelRequest.setId((long) i);
+            modelRequest.setNomePassageiro("Passageiro " + i);
+            modelRequest.setCiaAerea("Cia " + i);
+            modelRequest.setDataHoraSaida(LocalDateTime.now().plusDays(i)); // Atribui uma data futura
+            modelRequest.setDataHoraChegada(LocalDateTime.now().plusDays(i + 1)); // Atribui data de chegada
+            modelRequest.setCidadeOrigem("Cidade " + i);
+            modelRequest.setCidadeDestino("Destino " + i);
+
+            modelRequests.add(modelRequest);
         }
+
+        return modelRequests;
     }
 
-    // Chamar o método automaticamente ao iniciar a aplicação
-    @PostConstruct
-    public void init() {
-        buscarESalvarProdutosAereos();
+    // Método para salvar as solicitações geradas (caso precise salvar no banco)
+    public void salvarSolicitacoesCheias() {
+        List<ModelRequest> solicitacoes = gerarSolicitacoesCheias();
+        modelRequestRepository.saveAll(solicitacoes);
+        System.out.println("Solicitações geradas e prontas para serem salvas:");
+        solicitacoes.forEach(solicitacao -> System.out.println(solicitacao.getNomePassageiro()));
     }
 }
