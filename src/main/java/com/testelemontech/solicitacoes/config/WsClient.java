@@ -1,14 +1,14 @@
 package com.testelemontech.solicitacoes.config;
 
 import com.testelemontech.solicitacoes.model.ModelRequest;
+import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.ArrayList;
 
+@Component // Adicionando essa anotação para que o Spring reconheça como um Bean
 public class WsClient {
 
-    // Método sem parâmetros
     public List<ModelRequest> buscarProdutosAereos() {
-        // Lógica para chamar a API SOAP sem parâmetros
         System.out.println("Buscando produtos aéreos...");
 
         // Simulando a resposta da API
