@@ -28,17 +28,22 @@ public class ModelRequestService {
      */
     public List<ModelRequest> importarSolicitacoesDaLemontech() {
         logger.info("🔄 Iniciando importação de solicitações da Lemontech...");
-        // Define o intervalo, por exemplo, últimos 3 meses até agora
-        LocalDateTime startDate = LocalDateTime.now().minusMonths(3);
-        LocalDateTime endDate = LocalDateTime.now();
-        List<ModelRequest> solicitacoesImportadas = wsClient.buscarProdutosAereos(startDate, endDate);
 
+        // Buscar as solicitações do Web Service SOAP
+        List<ModelRequest> solicitacoesImportadas = wsClient.buscarProdutosAereos(
+                LocalDateTime.now().minusMonths(3),  // Exemplo: buscar dos últimos 3 meses
+                LocalDateTime.now()
+        );
+
+        // Verificar se há dados antes de salvar
         if (!solicitacoesImportadas.isEmpty()) {
             modelRequestRepository.saveAll(solicitacoesImportadas);
-            logger.info("✅ {} solicitações importadas e salvas no banco.", solicitacoesImportadas.size());
-            return solicitacoesImportadas;
+            logger.info("✅ {} solicitações foram importadas e salvas.", solicitacoesImportadas.size());
+            return solicitacoesImportadas;  // Retorna os dados importados
         }
-        logger.warn("⚠️ Nenhuma nova solicitação foi encontrada para importar.");
-        return List.of();
+
+        logger.warn("⚠️ Nenhuma solicitação nova foi encontrada para importar.");
+        return List.of();  // Retorna uma lista vazia se não houver novas solicitações
     }
+
 }

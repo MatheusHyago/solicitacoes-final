@@ -25,11 +25,15 @@ public class ModelRequestController {
      */
     @PostMapping("/importar")
     public ResponseEntity<List<ModelRequest>> importarSolicitacoes() {
-        logger.info("🔄 Requisição para importar solicitações recebida.");
+        logger.info("📨 Requisição para importar solicitações recebida.");
+
         List<ModelRequest> importadas = modelRequestService.importarSolicitacoesDaLemontech();
+
         if (!importadas.isEmpty()) {
-            return ResponseEntity.ok(importadas);
+            return ResponseEntity.ok(importadas);  // Retorna a lista de solicitações importadas
         }
-        return ResponseEntity.noContent().build();
+
+        return ResponseEntity.noContent().build();  // Retorna 204 se nenhuma nova solicitação for importada
     }
+
 }
