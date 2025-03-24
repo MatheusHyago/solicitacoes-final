@@ -46,17 +46,13 @@ public class ModelRequestService {
         repository.deleteById(id);
     }
 
-    // Importa solicitações via SOAP (utiliza WsClient e converte as respostas em ModelRequest)
+    // Importa solicitações via SOAP
     public void importarSolicitacoesDaLemontech() {
         logger.info("Iniciando importação de solicitações da Lemontech...");
-
-        // Exemplo: número de protocolo 12345, data atual e código regional "SP"
         List<PesquisarConciliacaoCartaoResponse> responses = wsClient.buscarConciliacaoCartao(12345, LocalDate.now(), "SP");
-
         List<ModelRequest> modelRequests = responses.stream()
                 .map(this::toModelRequest)
                 .collect(Collectors.toList());
-
         if (!modelRequests.isEmpty()) {
             repository.saveAll(modelRequests);
             logger.info("Importação concluída com sucesso. {} solicitações importadas.", modelRequests.size());
@@ -65,10 +61,9 @@ public class ModelRequestService {
         }
     }
 
-    // Método de conversão: utiliza campos disponíveis na resposta para compor o ModelRequest.
+    // Método de conversão
     private ModelRequest toModelRequest(PesquisarConciliacaoCartaoResponse response) {
         LocalDateTime agora = LocalDateTime.now();
-        // Como não temos getNumeroProtocolo(), usamos getNumeroConciliacoes() como exemplo
         String codigo = response.getNumeroConciliacoes() != null
                 ? response.getNumeroConciliacoes().toString()
                 : "N/A";
