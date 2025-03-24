@@ -37,6 +37,12 @@ public class ModelRequest {
     @Column(nullable = false)
     private String cidadeDestino;
 
+    // Novo campo para data de solicitação
+    @Column(nullable = false)
+    private LocalDateTime dataSolicitacao;
+
+    // Getters e setters
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -57,4 +63,8 @@ public class ModelRequest {
 
     public String getCidadeDestino() { return cidadeDestino; }
     public void setCidadeDestino(String cidadeDestino) { this.cidadeDestino = cidadeDestino; }
+
+    // Novo getter e setter para dataSolicitacao
+    public LocalDateTime getDataSolicitacao() { return dataSolicitacao; }
+    public void setDataSolicitacao(LocalDateTime dataSolicitacao) { this.dataSolicitacao = dataSolicitacao; }
 }

@@ -5,10 +5,9 @@ import com.testelemontech.solicitacoes.repository.ModelRequestRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.time.LocalDateTime; // Importando LocalDateTime
 
 @Service
 public class ModelRequestService {
@@ -16,50 +15,54 @@ public class ModelRequestService {
     @Autowired
     private ModelRequestRepository modelRequestRepository;
 
-    // Método para salvar uma nova solicitação de viagem
+    // 🔹 Método para salvar uma nova solicitação
     public ModelRequest salvarSolicitacao(ModelRequest modelRequest) {
         return modelRequestRepository.save(modelRequest);
     }
 
-    // Método para buscar todas as solicitações salvas no banco
+    // 🔹 Método para buscar todas as solicitações salvas no banco
     public List<ModelRequest> buscarTodasSolicitacoes() {
         return modelRequestRepository.findAll();
     }
 
-    // Método para buscar uma solicitação por ID
+    // 🔹 Método para buscar uma solicitação por ID
     public Optional<ModelRequest> buscarSolicitacaoPorId(Long id) {
         return modelRequestRepository.findById(id);
     }
 
-    // Método para excluir uma solicitação por ID
+    // 🔹 Método para excluir uma solicitação por ID
     public void excluirSolicitacao(Long id) {
         modelRequestRepository.deleteById(id);
     }
 
-    // Método para gerar uma lista cheia de ModelRequests fictícias
-    public List<ModelRequest> gerarSolicitacoesCheias() {
-        List<ModelRequest> modelRequests = new ArrayList<>(); // Importando ArrayList
-
-        // Gerar 10 solicitações fictícias
-        for (int i = 1; i <= 10; i++) {
-            ModelRequest modelRequest = new ModelRequest();
-            modelRequest.setNomePassageiro("Passageiro " + i);
-            modelRequest.setCiaAerea("Cia " + i);
-            modelRequest.setDataHoraSaida(LocalDateTime.now().plusDays(i)); // Atribui uma data futura
-            modelRequest.setDataHoraChegada(LocalDateTime.now().plusDays(i + 1)); // Atribui data de chegada
-            modelRequest.setCidadeOrigem("Cidade " + i);
-            modelRequest.setCidadeDestino("Destino " + i);
-
-            modelRequests.add(modelRequest);
-        }
-        return modelRequests;
+    // 🔹 Método para gerar e salvar solicitações fictícias
+    public void salvarSolicitacoesCheias() {
+        List<ModelRequest> solicitacoesFicticias = gerarSolicitacoesFicticias();
+        modelRequestRepository.saveAll(solicitacoesFicticias);
+        System.out.println("✅ Solicitações fictícias geradas e salvas com sucesso!");
     }
 
-    // Método para salvar as solicitações geradas (caso precise salvar no banco)
-    public void salvarSolicitacoesCheias() {
-        List<ModelRequest> solicitacoes = gerarSolicitacoesCheias();
-        modelRequestRepository.saveAll(solicitacoes);
-        System.out.println("Solicitações geradas e prontas para serem salvas:");
-        solicitacoes.forEach(solicitacao -> System.out.println(solicitacao.getNomePassageiro()));
+    // 🔹 Método auxiliar para gerar solicitações fictícias
+    private List<ModelRequest> gerarSolicitacoesFicticias() {
+        // Exemplo simples de dados fictícios
+        ModelRequest solicitacao1 = new ModelRequest();
+        solicitacao1.setNomePassageiro("Passageiro 1");
+        solicitacao1.setDataSolicitacao(LocalDateTime.now().minusDays(10));
+
+        ModelRequest solicitacao2 = new ModelRequest();
+        solicitacao2.setNomePassageiro("Passageiro 2");
+        solicitacao2.setDataSolicitacao(LocalDateTime.now().minusDays(5));
+
+        ModelRequest solicitacao3 = new ModelRequest();
+        solicitacao3.setNomePassageiro("Passageiro 3");
+        solicitacao3.setDataSolicitacao(LocalDateTime.now().minusDays(3));
+
+        return List.of(solicitacao1, solicitacao2, solicitacao3);
+    }
+
+    // 🔹 Método para importar solicitações da Lemontech via SOAP
+    public void importarSolicitacoesDaLemontech() {
+        // A implementação dessa lógica depende da sua integração com o SOAP.
+        // Deixe um código de exemplo para importar.
     }
 }
