@@ -1,12 +1,13 @@
 package com.testelemontech.solicitacoes.model;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "model_requests")
 public class ModelRequest {
 
     @Id
@@ -14,47 +15,77 @@ public class ModelRequest {
     private Long id;
 
     @NotBlank(message = "Nome do passageiro é obrigatório")
-    @Column(nullable = false)
     private String nomePassageiro;
 
     @NotBlank(message = "Companhia aérea é obrigatória")
-    @Column(nullable = false)
     private String ciaAerea;
 
-    @NotNull(message = "Data e hora de saída são obrigatórias")
-    @Column(nullable = false)
-    private LocalDateTime dataHoraSaida;
-
-    @NotNull(message = "Data e hora de chegada são obrigatórias")
-    @Column(nullable = false)
-    private LocalDateTime dataHoraChegada;
-
     @NotBlank(message = "Cidade de origem é obrigatória")
-    @Column(nullable = false)
     private String cidadeOrigem;
 
     @NotBlank(message = "Cidade de destino é obrigatória")
-    @Column(nullable = false)
     private String cidadeDestino;
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    @NotBlank(message = "Data e hora de saída são obrigatórias")
+    private LocalDateTime dataHoraSaida;
 
-    public String getNomePassageiro() { return nomePassageiro; }
-    public void setNomePassageiro(String nomePassageiro) { this.nomePassageiro = nomePassageiro; }
+    @NotBlank(message = "Data e hora de chegada são obrigatórias")
+    private LocalDateTime dataHoraChegada;
 
-    public String getCiaAerea() { return ciaAerea; }
-    public void setCiaAerea(String ciaAerea) { this.ciaAerea = ciaAerea; }
+    // Getters and Setters
+    public Long getId() {
+        return id;
+    }
 
-    public LocalDateTime getDataHoraSaida() { return dataHoraSaida; }
-    public void setDataHoraSaida(LocalDateTime dataHoraSaida) { this.dataHoraSaida = dataHoraSaida; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public LocalDateTime getDataHoraChegada() { return dataHoraChegada; }
-    public void setDataHoraChegada(LocalDateTime dataHoraChegada) { this.dataHoraChegada = dataHoraChegada; }
+    public String getNomePassageiro() {
+        return nomePassageiro;
+    }
 
-    public String getCidadeOrigem() { return cidadeOrigem; }
-    public void setCidadeOrigem(String cidadeOrigem) { this.cidadeOrigem = cidadeOrigem; }
+    public void setNomePassageiro(String nomePassageiro) {
+        this.nomePassageiro = nomePassageiro;
+    }
 
-    public String getCidadeDestino() { return cidadeDestino; }
-    public void setCidadeDestino(String cidadeDestino) { this.cidadeDestino = cidadeDestino; }
+    public String getCiaAerea() {
+        return ciaAerea;
+    }
+
+    public void setCiaAerea(String ciaAerea) {
+        this.ciaAerea = ciaAerea;
+    }
+
+    public String getCidadeOrigem() {
+        return cidadeOrigem;
+    }
+
+    public void setCidadeOrigem(String cidadeOrigem) {
+        this.cidadeOrigem = cidadeOrigem;
+    }
+
+    public String getCidadeDestino() {
+        return cidadeDestino;
+    }
+
+    public void setCidadeDestino(String cidadeDestino) {
+        this.cidadeDestino = cidadeDestino;
+    }
+
+    public LocalDateTime getDataHoraSaida() {
+        return dataHoraSaida;
+    }
+
+    public void setDataHoraSaida(LocalDateTime dataHoraSaida) {
+        this.dataHoraSaida = dataHoraSaida;
+    }
+
+    public LocalDateTime getDataHoraChegada() {
+        return dataHoraChegada;
+    }
+
+    public void setDataHoraChegada(LocalDateTime dataHoraChegada) {
+        this.dataHoraChegada = dataHoraChegada;
+    }
 }

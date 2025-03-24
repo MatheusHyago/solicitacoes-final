@@ -23,9 +23,21 @@ function carregarSolicitacoes() {
 // Função para adicionar nova solicitação ao backend
 function adicionarSolicitacao() {
     const nomePassageiro = document.getElementById("nomePassageiro").value;
+    const dataHoraChegada = document.getElementById("dataHoraChegada").value;
+    const cidadeOrigem = document.getElementById("cidadeOrigem").value;
+    const cidadeDestino = document.getElementById("cidadeDestino").value;
+    const dataHoraSaida = document.getElementById("dataHoraSaida").value;
+    const ciaAerea = document.getElementById("ciaAerea").value;
 
-    if (nomePassageiro.trim() !== "") {
-        const novaSolicitacao = { nomePassageiro, status: 'Em processo' };
+    if (nomePassageiro.trim() !== "" && dataHoraChegada && cidadeOrigem && cidadeDestino && dataHoraSaida && ciaAerea) {
+        const novaSolicitacao = {
+            nomePassageiro,
+            dataHoraChegada,
+            cidadeOrigem,
+            cidadeDestino,
+            dataHoraSaida,
+            ciaAerea
+        };
 
         fetch('http://localhost:8081/solicitacoes', {
             method: 'POST',
@@ -48,10 +60,17 @@ function adicionarSolicitacao() {
 
             // Limpar o campo de entrada
             document.getElementById("nomePassageiro").value = '';
+            document.getElementById("dataHoraChegada").value = '';
+            document.getElementById("cidadeOrigem").value = '';
+            document.getElementById("cidadeDestino").value = '';
+            document.getElementById("dataHoraSaida").value = '';
+            document.getElementById("ciaAerea").value = '';
         })
-        .catch(error => console.error('Erro ao adicionar solicitação:', error));
+        .catch(error => {
+            console.error('Erro ao adicionar solicitação:', error);
+        });
     } else {
-        alert("Por favor, insira o nome do passageiro.");
+        alert("Por favor, preencha todos os campos obrigatórios.");
     }
 }
 
@@ -72,11 +91,11 @@ function excluirSolicitacao(id) {
 // Função para gerar solicitações fictícias
 function gerarSolicitacoes() {
     const solicitacoes = [
-        { nomePassageiro: "João Silva", status: "Em processo" },
-        { nomePassageiro: "Maria Oliveira", status: "Em processo" },
-        { nomePassageiro: "Carlos Souza", status: "Em processo" },
-        { nomePassageiro: "Ana Pereira", status: "Em processo" },
-        { nomePassageiro: "Pedro Costa", status: "Em processo" }
+        { nomePassageiro: "João Silva", status: "Em processo", dataHoraChegada: "2025-03-25T14:00", cidadeOrigem: "São Paulo", cidadeDestino: "Rio de Janeiro", dataHoraSaida: "2025-03-25T12:00", ciaAerea: "LATAM" },
+        { nomePassageiro: "Maria Oliveira", status: "Em processo", dataHoraChegada: "2025-03-25T14:30", cidadeOrigem: "São Paulo", cidadeDestino: "Belo Horizonte", dataHoraSaida: "2025-03-25T13:00", ciaAerea: "Gol" },
+        { nomePassageiro: "Carlos Souza", status: "Em processo", dataHoraChegada: "2025-03-25T15:00", cidadeOrigem: "São Paulo", cidadeDestino: "Curitiba", dataHoraSaida: "2025-03-25T13:30", ciaAerea: "Azul" },
+        { nomePassageiro: "Ana Pereira", status: "Em processo", dataHoraChegada: "2025-03-25T16:00", cidadeOrigem: "São Paulo", cidadeDestino: "Fortaleza", dataHoraSaida: "2025-03-25T14:00", ciaAerea: "Avianca" },
+        { nomePassageiro: "Pedro Costa", status: "Em processo", dataHoraChegada: "2025-03-25T16:30", cidadeOrigem: "São Paulo", cidadeDestino: "Salvador", dataHoraSaida: "2025-03-25T14:30", ciaAerea: "Gol" }
     ];
 
     solicitacoes.forEach(solicitacao => {
