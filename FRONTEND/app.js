@@ -9,6 +9,7 @@ function carregarSolicitacoes() {
             data.forEach(solicitacao => {
                 // Criar o item de solicitação
                 const li = document.createElement("li");
+                li.id = solicitacao.id; // Adiciona o id para poder excluir depois
                 li.innerHTML = `
                     ${solicitacao.nomePassageiro} - ${solicitacao.status}
                     <button class="delete" onclick="excluirSolicitacao(${solicitacao.id})">Excluir</button>
@@ -38,6 +39,7 @@ function adicionarSolicitacao() {
             // Adicionar a nova solicitação à lista na tela
             const lista = document.getElementById("solicitacoesList");
             const li = document.createElement("li");
+            li.id = data.id; // Adiciona o id para poder excluir depois
             li.innerHTML = `
                 ${data.nomePassageiro} - ${data.status}
                 <button class="delete" onclick="excluirSolicitacao(${data.id})">Excluir</button>
@@ -90,6 +92,7 @@ function gerarSolicitacoes() {
             // Adicionar a nova solicitação à lista na tela
             const lista = document.getElementById("solicitacoesList");
             const li = document.createElement("li");
+            li.id = data.id; // Adiciona o id para poder excluir depois
             li.innerHTML = `
                 ${data.nomePassageiro} - ${data.status}
                 <button class="delete" onclick="excluirSolicitacao(${data.id})">Excluir</button>

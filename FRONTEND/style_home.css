@@ -1,4 +1,4 @@
-/* Estilos gerais */
+/* Definindo o estilo global */
 body {
     font-family: Arial, sans-serif;
     background-color: #f4f4f9;
@@ -9,72 +9,84 @@ body {
 /* Container principal */
 .container {
     width: 80%;
-    max-width: 600px;
     margin: 0 auto;
     padding: 20px;
-    background-color: #fff;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     text-align: center;
 }
 
 /* Título */
 h1 {
-    font-size: 24px;
+    font-size: 2em;
+    color: #333;
     margin-bottom: 20px;
 }
 
-/* Formulário de entrada */
+/* Estilo para o formulário de input */
 .form {
     margin-bottom: 20px;
 }
 
-input {
-    padding: 8px;
-    font-size: 16px;
-    border-radius: 4px;
-    border: 1px solid #ccc;
+input[type="text"] {
+    padding: 10px;
+    font-size: 1em;
+    width: 250px;
     margin-right: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    outline: none;
 }
 
+input[type="text"]:focus {
+    border-color: #5c6bc0;
+}
+
+/* Botão */
 button {
-    padding: 8px 12px;
-    font-size: 16px;
-    background-color: #28a745;
+    padding: 10px 20px;
+    background-color: #5c6bc0;
     color: white;
     border: none;
-    border-radius: 4px;
+    border-radius: 5px;
     cursor: pointer;
+    font-size: 1em;
 }
 
 button:hover {
-    background-color: #218838;
+    background-color: #3f51b5;
 }
 
 /* Lista de solicitações */
-ul {
-    list-style: none;
+ul#solicitacoesList {
+    list-style-type: none;
     padding: 0;
 }
 
-li {
-    background-color: #f8f9fa;
-    padding: 10px;
-    margin: 5px 0;
-    border-radius: 4px;
+ul#solicitacoesList li {
+    background-color: #ffffff;
+    border: 1px solid #ccc;
+    margin: 10px 0;
+    padding: 15px;
+    border-radius: 5px;
+    font-size: 1.1em;
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
 
-button.delete {
-    background-color: #dc3545;
-    border-radius: 4px;
-    padding: 4px 8px;
+ul#solicitacoesList li button {
+    background-color: #e53935;
+    padding: 5px 10px;
+    font-size: 0.9em;
+    border-radius: 5px;
     color: white;
     cursor: pointer;
 }
 
-button.delete:hover {
-    background-color: #c82333;
+ul#solicitacoesList li button:hover {
+    background-color: #d32f2f;
+}
+
+/* Adicionando um pouco de espaçamento nas margens */
+.container {
+    margin-top: 50px;
 }

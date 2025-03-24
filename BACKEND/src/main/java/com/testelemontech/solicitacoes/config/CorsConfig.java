@@ -9,7 +9,8 @@ public class CorsConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")  // Permite todas as rotas
-                .allowedOrigins("http://localhost:8080")  // Permite o frontend na porta 8080
-                .allowedMethods("GET", "POST", "DELETE", "PUT");  // Permite métodos GET, POST, DELETE e PUT
+                .allowedOrigins("http://127.0.0.1:5500")  // Permite o frontend do Live Server
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                .allowCredentials(true);
     }
 }
