@@ -37,12 +37,28 @@ public class ModelRequest {
     @Column(nullable = false)
     private String cidadeDestino;
 
-    // Novo campo para data de solicitação
+    @NotNull(message = "Data de solicitação é obrigatória")
     @Column(nullable = false)
     private LocalDateTime dataSolicitacao;
 
-    // Getters e setters
+    // Construtor vazio (obrigatório para JPA)
+    public ModelRequest() {
+    }
 
+    // Construtor com todos os atributos
+    public ModelRequest(String nomePassageiro, String ciaAerea, LocalDateTime dataHoraSaida,
+                        LocalDateTime dataHoraChegada, String cidadeOrigem, String cidadeDestino,
+                        LocalDateTime dataSolicitacao) {
+        this.nomePassageiro = nomePassageiro;
+        this.ciaAerea = ciaAerea;
+        this.dataHoraSaida = dataHoraSaida;
+        this.dataHoraChegada = dataHoraChegada;
+        this.cidadeOrigem = cidadeOrigem;
+        this.cidadeDestino = cidadeDestino;
+        this.dataSolicitacao = dataSolicitacao;
+    }
+
+    // Getters e Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -64,7 +80,21 @@ public class ModelRequest {
     public String getCidadeDestino() { return cidadeDestino; }
     public void setCidadeDestino(String cidadeDestino) { this.cidadeDestino = cidadeDestino; }
 
-    // Novo getter e setter para dataSolicitacao
     public LocalDateTime getDataSolicitacao() { return dataSolicitacao; }
     public void setDataSolicitacao(LocalDateTime dataSolicitacao) { this.dataSolicitacao = dataSolicitacao; }
+
+    // Método toString para facilitar depuração
+    @Override
+    public String toString() {
+        return "ModelRequest{" +
+                "id=" + id +
+                ", nomePassageiro='" + nomePassageiro + '\'' +
+                ", ciaAerea='" + ciaAerea + '\'' +
+                ", dataHoraSaida=" + dataHoraSaida +
+                ", dataHoraChegada=" + dataHoraChegada +
+                ", cidadeOrigem='" + cidadeOrigem + '\'' +
+                ", cidadeDestino='" + cidadeDestino + '\'' +
+                ", dataSolicitacao=" + dataSolicitacao +
+                '}';
+    }
 }

@@ -44,7 +44,7 @@ function adicionarSolicitacao() {
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify(novaSolicitacao)
+            body: JSON.stringify(novaSolicitacao) 
         })
         .then(response => response.json())
         .then(data => {
