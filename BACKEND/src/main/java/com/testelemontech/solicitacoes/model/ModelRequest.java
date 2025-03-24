@@ -37,7 +37,6 @@ public class ModelRequest {
     @Column(nullable = false)
     private String cidadeDestino;
 
-    // Getters e Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 

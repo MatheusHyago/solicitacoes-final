@@ -43,7 +43,6 @@ public class ModelRequestService {
         // Gerar 10 solicitações fictícias
         for (int i = 1; i <= 10; i++) {
             ModelRequest modelRequest = new ModelRequest();
-            modelRequest.setId((long) i);
             modelRequest.setNomePassageiro("Passageiro " + i);
             modelRequest.setCiaAerea("Cia " + i);
             modelRequest.setDataHoraSaida(LocalDateTime.now().plusDays(i)); // Atribui uma data futura
@@ -53,7 +52,6 @@ public class ModelRequestService {
 
             modelRequests.add(modelRequest);
         }
-
         return modelRequests;
     }
 
