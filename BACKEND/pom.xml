@@ -127,8 +127,6 @@
 
 	<build>
 		<plugins>
-
-			<!-- JAX-WS Maven Plugin for WSImport -->
 			<plugin>
 				<groupId>com.sun.xml.ws</groupId>
 				<artifactId>jaxws-maven-plugin</artifactId>
@@ -145,7 +143,6 @@
 				</configuration>
 			</plugin>
 
-			<!-- Apache CXF Codegen Plugin for WSDL to Java -->
 			<plugin>
 				<groupId>org.apache.cxf</groupId>
 				<artifactId>cxf-codegen-plugin</artifactId>
@@ -172,8 +169,6 @@
 					</execution>
 				</executions>
 			</plugin>
-
-			<!-- Spring Boot Maven Plugin -->
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
