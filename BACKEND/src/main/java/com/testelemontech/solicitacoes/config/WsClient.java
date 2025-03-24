@@ -42,7 +42,7 @@ public class WsClient {
 
     public List<PesquisarConciliacaoCartaoResponse> buscarConciliacaoCartao(Integer numeroProtocolo, LocalDate dataVencimento, String codRegional) {
         try {
-            logger.info("🔍 Enviando requisição SOAP para {} | Protocolo: {}, Data Vencimento: {}", wsdlUrl, numeroProtocolo, dataVencimento);
+            logger.info(" Enviando requisição SOAP para {} | Protocolo: {}, Data Vencimento: {}", wsdlUrl, numeroProtocolo, dataVencimento);
 
             PesquisarConciliacaoCartaoRequest request = buildRequest(numeroProtocolo, dataVencimento, codRegional);
 

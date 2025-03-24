@@ -45,7 +45,7 @@ public class ModelRequest {
     @Column(nullable = false)
     private LocalDateTime dataSolicitacao;
 
-    // Construtor vazio (obrigatório para JPA)
+
     public ModelRequest() {}
 
     // Construtor com todos os atributos
@@ -90,7 +90,6 @@ public class ModelRequest {
     public LocalDateTime getDataSolicitacao() { return dataSolicitacao; }
     public void setDataSolicitacao(LocalDateTime dataSolicitacao) { this.dataSolicitacao = dataSolicitacao; }
 
-    // Método toString para facilitar depuração
     @Override
     public String toString() {
         return "ModelRequest{" +
