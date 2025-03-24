@@ -1,24 +1,25 @@
 package com.testelemontech.solicitacoes.config;
 
-import com.testelemontech.solicitacoes.model.ModelRequest;
-import com.testelemontech.solicitacoes.wsdl.PesquisarSolicitacaoRequest;
-import com.testelemontech.solicitacoes.wsdl.PesquisarSolicitacaoResponse;
+import com.testelemontech.solicitacoes.wsdl.PesquisarConciliacaoCartaoRequest;
+import com.testelemontech.solicitacoes.wsdl.PesquisarConciliacaoCartaoResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.springframework.ws.client.core.WebServiceMessageCallback;
 import org.springframework.ws.client.core.WebServiceTemplate;
 import org.springframework.ws.soap.SoapHeader;
 import org.springframework.ws.soap.SoapMessage;
-import jakarta.xml.bind.JAXBElement;
-import javax.xml.namespace.QName;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.List;
-import java.util.stream.Collectors;
 
-@Component
+import javax.xml.datatype.DatatypeFactory;
+import javax.xml.datatype.XMLGregorianCalendar;
+import javax.xml.namespace.QName;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.GregorianCalendar;
+import java.util.List;
+
+@Service
 public class WsClient {
     private static final Logger logger = LoggerFactory.getLogger(WsClient.class);
     private final WebServiceTemplate webServiceTemplate;
@@ -39,71 +40,61 @@ public class WsClient {
         this.webServiceTemplate = webServiceTemplate;
     }
 
-    public List<ModelRequest> buscarProdutosAereos(LocalDateTime startDate, LocalDateTime endDate) {
+    public List<PesquisarConciliacaoCartaoResponse> buscarConciliacaoCartao(Integer numeroProtocolo, LocalDate dataVencimento, String codRegional) {
         try {
-            logger.info("Enviando requisição SOAP para {} com datas: {} a {}", wsdlUrl, startDate, endDate);
-            PesquisarSolicitacaoRequest request = buildRequest(startDate, endDate);
-            QName qName = new QName("http://lemontech.com.br/selfbooking/wsselfbooking/services", "pesquisarSolicitacao");
-            JAXBElement<PesquisarSolicitacaoRequest> jaxbRequest = new JAXBElement<>(qName, PesquisarSolicitacaoRequest.class, request);
+            logger.info("🔍 Enviando requisição SOAP para {} | Protocolo: {}, Data Vencimento: {}", wsdlUrl, numeroProtocolo, dataVencimento);
+
+            PesquisarConciliacaoCartaoRequest request = buildRequest(numeroProtocolo, dataVencimento, codRegional);
 
             WebServiceMessageCallback callback = message -> {
                 SoapMessage soapMessage = (SoapMessage) message;
                 SoapHeader soapHeader = soapMessage.getSoapHeader();
                 String ns = "http://lemontech.com.br/selfbooking/wsselfbooking/services";
-                soapHeader.addHeaderElement(new QName(ns, "userPassword", "ser")).setText(password);
-                soapHeader.addHeaderElement(new QName(ns, "userName", "ser")).setText(username);
-                soapHeader.addHeaderElement(new QName(ns, "keyClient", "ser")).setText(keyClient);
+
+                soapHeader.addHeaderElement(new QName(ns, "userName")).setText(username);
+                soapHeader.addHeaderElement(new QName(ns, "userPassword")).setText(password);
+                soapHeader.addHeaderElement(new QName(ns, "keyClient")).setText(keyClient);
             };
 
-            JAXBElement<PesquisarSolicitacaoResponse> response = (JAXBElement<PesquisarSolicitacaoResponse>)
-                    webServiceTemplate.marshalSendAndReceive(wsdlUrl, jaxbRequest, callback);
+            PesquisarConciliacaoCartaoResponse response = (PesquisarConciliacaoCartaoResponse)
+                    webServiceTemplate.marshalSendAndReceive(wsdlUrl, request, callback);
 
-            logger.info("Resposta SOAP recebida com sucesso!");
-            return processarResposta(response.getValue());
+            logger.info("✅ Resposta SOAP recebida com sucesso!");
+            return List.of(response);
         } catch (Exception e) {
-            logger.error("Erro ao buscar produtos aéreos via SOAP: {}", e.getMessage(), e);
+            logger.error("❌ Erro ao buscar conciliação de cartão via SOAP: {}", e.getMessage(), e);
             return List.of();
         }
     }
 
-    private PesquisarSolicitacaoRequest buildRequest(LocalDateTime startDate, LocalDateTime endDate) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
-        PesquisarSolicitacaoRequest request = new PesquisarSolicitacaoRequest();
-        request.getContent().add(new JAXBElement<>(new QName("dataInicial"), String.class, startDate.format(formatter)));
-        request.getContent().add(new JAXBElement<>(new QName("dataFinal"), String.class, endDate.format(formatter)));
-        request.getContent().add(new JAXBElement<>(new QName("registroInicial"), Integer.class, 1));
-        request.getContent().add(new JAXBElement<>(new QName("quantidadeRegistros"), Integer.class, 50));
-        request.getContent().add(new JAXBElement<>(new QName("sincronizado"), Boolean.class, false));
-        request.getContent().add(new JAXBElement<>(new QName("exibirRemarks"), Boolean.class, true));
-        request.getContent().add(new JAXBElement<>(new QName("exibirAprovadas"), Boolean.class, false));
-        request.getContent().add(new JAXBElement<>(new QName("tipoSolicitacao"), String.class, "TODOS"));
-        request.getContent().add(new JAXBElement<>(new QName("version"), String.class, "2.3.1"));
+    private PesquisarConciliacaoCartaoRequest buildRequest(Integer numeroProtocolo, LocalDate dataVencimento, String codRegional) {
+        PesquisarConciliacaoCartaoRequest request = new PesquisarConciliacaoCartaoRequest();
+
+        if (numeroProtocolo != null) {
+            request.setNumeroProtocolo(numeroProtocolo);
+        }
+
+        if (dataVencimento != null) {
+            request.setDataVencimento(convertToXMLGregorianCalendar(dataVencimento));
+        }
+
+        if (codRegional != null) {
+            request.setCodRegional(codRegional);
+        }
+
+        request.setRegistroInicial(1);
+        request.setQuantidadeRegistros(50);
+
         return request;
     }
 
-    private List<ModelRequest> processarResposta(PesquisarSolicitacaoResponse response) {
-        if (response == null || response.getSolicitacao() == null || response.getSolicitacao().isEmpty()) {
-            logger.warn("Nenhuma solicitação de viagem encontrada!");
-            return List.of();
+    private XMLGregorianCalendar convertToXMLGregorianCalendar(LocalDate localDate) {
+        try {
+            GregorianCalendar gcal = GregorianCalendar.from(localDate.atStartOfDay(ZoneId.systemDefault()));
+            return DatatypeFactory.newInstance().newXMLGregorianCalendar(gcal);
+        } catch (Exception e) {
+            logger.error("Erro ao converter LocalDate para XMLGregorianCalendar", e);
+            return null;
         }
-
-        return response.getSolicitacao().stream()
-                .map(solicitacao -> {
-                    ModelRequest model = new ModelRequest();
-                    model.setNomePassageiro(solicitacao.getPassageiros().getPassageiro().get(0).getNome());
-                    model.setCiaAerea(solicitacao.getCodigoCliente());
-                    model.setCidadeOrigem(solicitacao.getAereos().getAereo().get(0).getAereoSeguimento().get(0).getOrigem());
-                    model.setCidadeDestino(solicitacao.getAereos().getAereo().get(0).getAereoSeguimento().get(0).getDestino());
-                    model.setDataHoraSaida(solicitacao.getAereos().getAereo().get(0)
-                            .getAereoSeguimento().get(0).getDataSaida()
-                            .toGregorianCalendar().toZonedDateTime().toLocalDateTime());
-                    model.setDataHoraChegada(solicitacao.getAereos().getAereo().get(0)
-                            .getAereoSeguimento().get(0).getDataChegada()
-                            .toGregorianCalendar().toZonedDateTime().toLocalDateTime());
-                    model.setDataSolicitacao(solicitacao.getDataCriacaoSv()
-                            .toGregorianCalendar().toZonedDateTime().toLocalDateTime());
-                    return model;
-                })
-                .collect(Collectors.toList());
     }
 }

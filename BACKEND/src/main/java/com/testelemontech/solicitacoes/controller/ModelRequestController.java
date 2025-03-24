@@ -2,8 +2,6 @@ package com.testelemontech.solicitacoes.controller;
 
 import com.testelemontech.solicitacoes.model.ModelRequest;
 import com.testelemontech.solicitacoes.service.ModelRequestService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,60 +11,41 @@ import java.util.List;
 @RequestMapping("/solicitacoes")
 public class ModelRequestController {
 
-    private static final Logger logger = LoggerFactory.getLogger(ModelRequestController.class);
     private final ModelRequestService modelRequestService;
 
     public ModelRequestController(ModelRequestService modelRequestService) {
         this.modelRequestService = modelRequestService;
     }
 
-    /**
-     * 🔍 Retorna todas as solicitações salvas no banco de dados.
-     * @return Lista de ModelRequest.
-     */
+    @PostMapping
+    public ResponseEntity<ModelRequest> salvarSolicitacao(@RequestBody ModelRequest modelRequest) {
+        return ResponseEntity.ok(modelRequestService.salvarSolicitacao(modelRequest));
+    }
+
     @GetMapping
-    public ResponseEntity<List<ModelRequest>> listarTodas() {
-        logger.info("📨 Requisição para listar todas as solicitações recebida.");
-        List<ModelRequest> solicitacoes = modelRequestService.listarTodas();
-
-        if (solicitacoes.isEmpty()) {
-            logger.warn("⚠️ Nenhuma solicitação encontrada no banco.");
-            return ResponseEntity.noContent().build();
-        }
-        return ResponseEntity.ok(solicitacoes);
+    public ResponseEntity<List<ModelRequest>> buscarTodasSolicitacoes() {
+        List<ModelRequest> solicitacoes = modelRequestService.buscarTodasSolicitacoes();
+        return solicitacoes.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(solicitacoes);
     }
 
-    /**
-     * 🔄 Importa novas solicitações via SOAP e salva no banco.
-     * @return Lista de ModelRequest importadas.
-     */
+    @GetMapping("/{id}")
+    public ResponseEntity<ModelRequest> buscarSolicitacaoPorId(@PathVariable Long id) {
+        return modelRequestService.buscarSolicitacaoPorId(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> excluirSolicitacao(@PathVariable Long id) {
+        modelRequestService.excluirSolicitacao(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    // Removido o endpoint "/gerar" que chamava salvarSolicitacoesCheias()
+
     @PostMapping("/importar")
-    public ResponseEntity<List<ModelRequest>> importarSolicitacoes() {
-        logger.info("📨 Requisição para importar solicitações recebida.");
-        List<ModelRequest> importadas = modelRequestService.importarSolicitacoesDaLemontech();
-
-        if (importadas.isEmpty()) {
-            logger.warn("⚠️ Nenhuma nova solicitação importada.");
-            return ResponseEntity.noContent().build();
-        }
-        return ResponseEntity.ok(importadas);
-    }
-
-    /**
-     * 🔄 Sincroniza as solicitações existentes no banco com as informações do serviço SOAP.
-     * @return Lista de ModelRequest sincronizadas.
-     */
-    @PostMapping("/sincronizar")
-    public ResponseEntity<List<ModelRequest>> sincronizarSolicitacoes() {
-        logger.info("🔄 Requisição para sincronizar solicitações recebida.");
-
-        // Chama o serviço para sincronizar os dados
-        List<ModelRequest> sincronizadas = modelRequestService.sincronizarSolicitacoesDaLemontech();
-
-        if (sincronizadas.isEmpty()) {
-            logger.warn("⚠️ Nenhuma solicitação foi sincronizada.");
-            return ResponseEntity.noContent().build();
-        }
-        return ResponseEntity.ok(sincronizadas);
+    public ResponseEntity<String> importarSolicitacoes() {
+        modelRequestService.importarSolicitacoesDaLemontech();
+        return ResponseEntity.ok("Importação concluída com sucesso!");
     }
 }

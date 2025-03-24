@@ -1,102 +1,87 @@
 package com.testelemontech.solicitacoes.service;
 
+import com.testelemontech.solicitacoes.config.WsClient;
 import com.testelemontech.solicitacoes.model.ModelRequest;
 import com.testelemontech.solicitacoes.repository.ModelRequestRepository;
-import com.testelemontech.solicitacoes.config.WsClient;
+import com.testelemontech.solicitacoes.wsdl.PesquisarConciliacaoCartaoResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class ModelRequestService {
 
     private static final Logger logger = LoggerFactory.getLogger(ModelRequestService.class);
+    private final WsClient wsClient;
+    private final ModelRequestRepository repository;
 
-    @Autowired
-    private WsClient wsClient; // Cliente SOAP para buscar dados
-
-    @Autowired
-    private ModelRequestRepository modelRequestRepository;
-
-    /**
-     * 🔍 Lista todas as solicitações salvas no banco.
-     * @return Lista de ModelRequest.
-     */
-    public List<ModelRequest> listarTodas() {
-        logger.info("📥 Buscando todas as solicitações salvas no banco.");
-        return modelRequestRepository.findAll();
+    public ModelRequestService(WsClient wsClient, ModelRequestRepository repository) {
+        this.wsClient = wsClient;
+        this.repository = repository;
     }
 
-    /**
-     * 🔄 Importa solicitações da Lemontech via SOAP e salva no banco.
-     * @return Lista de ModelRequest importadas.
-     */
-    public List<ModelRequest> importarSolicitacoesDaLemontech() {
-        logger.info("🔄 Iniciando importação de solicitações da Lemontech...");
-
-        // Define a data inicial como 3 meses atrás e a final como hoje
-        LocalDateTime dataInicial = LocalDateTime.now().minusMonths(3);
-        LocalDateTime dataFinal = LocalDateTime.now();
-
-        // Busca as solicitações através do WebService SOAP
-        List<ModelRequest> solicitacoes = wsClient.buscarProdutosAereos(dataInicial, dataFinal);
-
-        if (!solicitacoes.isEmpty()) {
-            modelRequestRepository.saveAll(solicitacoes);
-            logger.info("✅ {} solicitações foram importadas e salvas.", solicitacoes.size());
-        } else {
-            logger.warn("⚠️ Nenhuma solicitação nova foi encontrada para importar.");
-        }
-
-        return solicitacoes;
+    // Salva uma nova solicitação
+    public ModelRequest salvarSolicitacao(ModelRequest modelRequest) {
+        return repository.save(modelRequest);
     }
 
-    /**
-     * 🔄 Sincroniza as solicitações existentes no banco com as informações do serviço SOAP.
-     * @return Lista de ModelRequest sincronizadas.
-     */
-    public List<ModelRequest> sincronizarSolicitacoesDaLemontech() {
-        logger.info("🔄 Iniciando sincronização de solicitações da Lemontech...");
+    // Retorna todas as solicitações salvas
+    public List<ModelRequest> buscarTodasSolicitacoes() {
+        return repository.findAll();
+    }
 
-        // Define a data inicial como 3 meses atrás e a final como hoje
-        LocalDateTime dataInicial = LocalDateTime.now().minusMonths(3);
-        LocalDateTime dataFinal = LocalDateTime.now();
+    // Retorna uma solicitação pelo ID
+    public Optional<ModelRequest> buscarSolicitacaoPorId(Long id) {
+        return repository.findById(id);
+    }
 
-        // Busca as solicitações existentes através do WebService SOAP
-        List<ModelRequest> solicitacoesLemontech = wsClient.buscarProdutosAereos(dataInicial, dataFinal);
+    // Exclui uma solicitação pelo ID
+    public void excluirSolicitacao(Long id) {
+        repository.deleteById(id);
+    }
 
-        if (!solicitacoesLemontech.isEmpty()) {
-            for (ModelRequest novaSolicitacao : solicitacoesLemontech) {
-                // Verifica se a solicitação já existe no banco de dados (baseado no codigoSolicitacao)
-                ModelRequest solicitacaoExistente = modelRequestRepository.findByCodigoSolicitacao(novaSolicitacao.getCodigoSolicitacao());
+    // Importa solicitações via SOAP (utiliza WsClient e converte as respostas em ModelRequest)
+    public void importarSolicitacoesDaLemontech() {
+        logger.info("Iniciando importação de solicitações da Lemontech...");
 
-                if (solicitacaoExistente != null) {
-                    // Solicitação já existe, então atualiza os dados
-                    solicitacaoExistente.setNomePassageiro(novaSolicitacao.getNomePassageiro());
-                    solicitacaoExistente.setCiaAerea(novaSolicitacao.getCiaAerea());
-                    solicitacaoExistente.setCidadeOrigem(novaSolicitacao.getCidadeOrigem());
-                    solicitacaoExistente.setCidadeDestino(novaSolicitacao.getCidadeDestino());
-                    solicitacaoExistente.setDataHoraSaida(novaSolicitacao.getDataHoraSaida());
-                    solicitacaoExistente.setDataHoraChegada(novaSolicitacao.getDataHoraChegada());
-                    solicitacaoExistente.setDataSolicitacao(novaSolicitacao.getDataSolicitacao());
+        // Exemplo: número de protocolo 12345, data atual e código regional "SP"
+        List<PesquisarConciliacaoCartaoResponse> responses = wsClient.buscarConciliacaoCartao(12345, LocalDate.now(), "SP");
 
-                    modelRequestRepository.save(solicitacaoExistente); // Atualiza no banco
-                    logger.info("✅ Solicitação com código {} atualizada.", novaSolicitacao.getCodigoSolicitacao());
-                } else {
-                    // Solicitação não existe, então insere uma nova
-                    modelRequestRepository.save(novaSolicitacao);
-                    logger.info("✅ Solicitação com código {} inserida no banco.", novaSolicitacao.getCodigoSolicitacao());
-                }
-            }
-            logger.info("🔄 Sincronização concluída. {} solicitações foram sincronizadas.", solicitacoesLemontech.size());
+        List<ModelRequest> modelRequests = responses.stream()
+                .map(this::toModelRequest)
+                .collect(Collectors.toList());
+
+        if (!modelRequests.isEmpty()) {
+            repository.saveAll(modelRequests);
+            logger.info("Importação concluída com sucesso. {} solicitações importadas.", modelRequests.size());
         } else {
-            logger.warn("⚠️ Nenhuma solicitação foi encontrada para sincronizar.");
+            logger.warn("Nenhuma solicitação importada.");
         }
+    }
 
-        return solicitacoesLemontech;
+    // Método de conversão: utiliza campos disponíveis na resposta para compor o ModelRequest.
+    private ModelRequest toModelRequest(PesquisarConciliacaoCartaoResponse response) {
+        LocalDateTime agora = LocalDateTime.now();
+        // Como não temos getNumeroProtocolo(), usamos getNumeroConciliacoes() como exemplo
+        String codigo = response.getNumeroConciliacoes() != null
+                ? response.getNumeroConciliacoes().toString()
+                : "N/A";
+
+        ModelRequest model = new ModelRequest();
+        model.setCodigoSolicitacao(codigo);
+        model.setNomePassageiro("Nome Exemplo");    // Ajuste conforme os dados reais
+        model.setCiaAerea("Cia Exemplo");             // Ajuste conforme os dados reais
+        model.setCidadeOrigem("Origem Exemplo");        // Ajuste conforme os dados reais
+        model.setCidadeDestino("Destino Exemplo");      // Ajuste conforme os dados reais
+        model.setDataHoraSaida(agora);
+        model.setDataHoraChegada(agora);
+        model.setDataSolicitacao(agora);
+        return model;
     }
 }
