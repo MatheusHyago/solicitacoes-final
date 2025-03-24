@@ -59,10 +59,10 @@ public class WsClient {
             PesquisarConciliacaoCartaoResponse response = (PesquisarConciliacaoCartaoResponse)
                     webServiceTemplate.marshalSendAndReceive(wsdlUrl, request, callback);
 
-            logger.info("✅ Resposta SOAP recebida com sucesso!");
+            logger.info(" Resposta SOAP recebida com sucesso!");
             return List.of(response);
         } catch (Exception e) {
-            logger.error("❌ Erro ao buscar conciliação de cartão via SOAP: {}", e.getMessage(), e);
+            logger.error(" Erro ao buscar conciliação de cartão via SOAP: {}", e.getMessage(), e);
             return List.of();
         }
     }
