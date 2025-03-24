@@ -1,107 +1,67 @@
 package com.testelemontech.solicitacoes.model;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "model_requests")
+@Table(name = "model_requests")  // Mapeando explicitamente a tabela no banco de dados
 public class ModelRequest {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank(message = "Código da solicitação é obrigatório")
     @Column(nullable = false, unique = true)
-    private String codigoSolicitacao; // Identificador único da solicitação
+    private String codigoSolicitacao;
 
-    @NotBlank(message = "Nome do passageiro é obrigatório")
     @Column(nullable = false)
-    private String nomePassageiro;
+    private String nomeSolicitante;
 
-    @NotBlank(message = "Companhia aérea é obrigatória")
     @Column(nullable = false)
-    private String ciaAerea;
+    private Long idSolicitacao;
 
-    @NotNull(message = "Data e hora de saída são obrigatórias")
     @Column(nullable = false)
-    private LocalDateTime dataHoraSaida;
-
-    @NotNull(message = "Data e hora de chegada são obrigatórias")
-    @Column(nullable = false)
-    private LocalDateTime dataHoraChegada;
-
-    @NotBlank(message = "Cidade de origem é obrigatória")
-    @Column(nullable = false)
-    private String cidadeOrigem;
-
-    @NotBlank(message = "Cidade de destino é obrigatória")
-    @Column(nullable = false)
-    private String cidadeDestino;
-
-    @NotNull(message = "Data de solicitação é obrigatória")
-    @Column(nullable = false)
-    private LocalDateTime dataSolicitacao;
-
-
-    public ModelRequest() {}
-
-    // Construtor com todos os atributos
-    public ModelRequest(String codigoSolicitacao, String nomePassageiro, String ciaAerea, LocalDateTime dataHoraSaida,
-                        LocalDateTime dataHoraChegada, String cidadeOrigem, String cidadeDestino,
-                        LocalDateTime dataSolicitacao) {
-        this.codigoSolicitacao = codigoSolicitacao;
-        this.nomePassageiro = nomePassageiro;
-        this.ciaAerea = ciaAerea;
-        this.dataHoraSaida = dataHoraSaida;
-        this.dataHoraChegada = dataHoraChegada;
-        this.cidadeOrigem = cidadeOrigem;
-        this.cidadeDestino = cidadeDestino;
-        this.dataSolicitacao = dataSolicitacao;
-    }
+    private LocalDateTime dataCriacao;
 
     // Getters e Setters
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
 
-    public String getCodigoSolicitacao() { return codigoSolicitacao; }
-    public void setCodigoSolicitacao(String codigoSolicitacao) { this.codigoSolicitacao = codigoSolicitacao; }
+    public Long getId() {
+        return id;
+    }
 
-    public String getNomePassageiro() { return nomePassageiro; }
-    public void setNomePassageiro(String nomePassageiro) { this.nomePassageiro = nomePassageiro; }
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    public String getCiaAerea() { return ciaAerea; }
-    public void setCiaAerea(String ciaAerea) { this.ciaAerea = ciaAerea; }
+    public String getCodigoSolicitacao() {
+        return codigoSolicitacao;
+    }
 
-    public LocalDateTime getDataHoraSaida() { return dataHoraSaida; }
-    public void setDataHoraSaida(LocalDateTime dataHoraSaida) { this.dataHoraSaida = dataHoraSaida; }
+    public void setCodigoSolicitacao(String codigoSolicitacao) {
+        this.codigoSolicitacao = codigoSolicitacao;
+    }
 
-    public LocalDateTime getDataHoraChegada() { return dataHoraChegada; }
-    public void setDataHoraChegada(LocalDateTime dataHoraChegada) { this.dataHoraChegada = dataHoraChegada; }
+    public String getNomeSolicitante() {
+        return nomeSolicitante;
+    }
 
-    public String getCidadeOrigem() { return cidadeOrigem; }
-    public void setCidadeOrigem(String cidadeOrigem) { this.cidadeOrigem = cidadeOrigem; }
+    public void setNomeSolicitante(String nomeSolicitante) {
+        this.nomeSolicitante = nomeSolicitante;
+    }
 
-    public String getCidadeDestino() { return cidadeDestino; }
-    public void setCidadeDestino(String cidadeDestino) { this.cidadeDestino = cidadeDestino; }
+    public Long getIdSolicitacao() {
+        return idSolicitacao;
+    }
 
-    public LocalDateTime getDataSolicitacao() { return dataSolicitacao; }
-    public void setDataSolicitacao(LocalDateTime dataSolicitacao) { this.dataSolicitacao = dataSolicitacao; }
+    public void setIdSolicitacao(Long idSolicitacao) {
+        this.idSolicitacao = idSolicitacao;
+    }
 
-    @Override
-    public String toString() {
-        return "ModelRequest{" +
-                "id=" + id +
-                ", codigoSolicitacao='" + codigoSolicitacao + '\'' +
-                ", nomePassageiro='" + nomePassageiro + '\'' +
-                ", ciaAerea='" + ciaAerea + '\'' +
-                ", dataHoraSaida=" + dataHoraSaida +
-                ", dataHoraChegada=" + dataHoraChegada +
-                ", cidadeOrigem='" + cidadeOrigem + '\'' +
-                ", cidadeDestino='" + cidadeDestino + '\'' +
-                ", dataSolicitacao=" + dataSolicitacao +
-                '}';
+    public LocalDateTime getDataCriacao() {
+        return dataCriacao;
+    }
+
+    public void setDataCriacao(LocalDateTime dataCriacao) {
+        this.dataCriacao = dataCriacao;
     }
 }

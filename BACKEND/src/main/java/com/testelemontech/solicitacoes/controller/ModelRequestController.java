@@ -2,6 +2,8 @@ package com.testelemontech.solicitacoes.controller;
 
 import com.testelemontech.solicitacoes.model.ModelRequest;
 import com.testelemontech.solicitacoes.service.ModelRequestService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,40 +14,25 @@ import java.util.List;
 public class ModelRequestController {
 
     private final ModelRequestService modelRequestService;
+    private static final Logger logger = LoggerFactory.getLogger(ModelRequestController.class);
 
     public ModelRequestController(ModelRequestService modelRequestService) {
         this.modelRequestService = modelRequestService;
     }
 
-    @PostMapping
-    public ResponseEntity<ModelRequest> salvarSolicitacao(@RequestBody ModelRequest modelRequest) {
-        return ResponseEntity.ok(modelRequestService.salvarSolicitacao(modelRequest));
+    @GetMapping("/importar")
+    public ResponseEntity<List<ModelRequest>> importarSolicitacoes() {
+        logger.info("Iniciando a importação das solicitações.");
+        List<ModelRequest> solicitacoes = modelRequestService.buscarESalvarSolicitacoes();
+        logger.info("Solicitações importadas: " + solicitacoes.size());
+        return ResponseEntity.ok(solicitacoes);
     }
 
     @GetMapping
-    public ResponseEntity<List<ModelRequest>> buscarTodasSolicitacoes() {
-        List<ModelRequest> solicitacoes = modelRequestService.buscarTodasSolicitacoes();
-        return solicitacoes.isEmpty() ? ResponseEntity.noContent().build() : ResponseEntity.ok(solicitacoes);
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<ModelRequest> buscarSolicitacaoPorId(@PathVariable Long id) {
-        return modelRequestService.buscarSolicitacaoPorId(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> excluirSolicitacao(@PathVariable Long id) {
-        modelRequestService.excluirSolicitacao(id);
-        return ResponseEntity.noContent().build();
-    }
-
-    // Removido o endpoint "/gerar" que chamava salvarSolicitacoesCheias()
-
-    @PostMapping("/importar")
-    public ResponseEntity<String> importarSolicitacoes() {
-        modelRequestService.importarSolicitacoesDaLemontech();
-        return ResponseEntity.ok("Importação concluída com sucesso!");
+    public ResponseEntity<List<ModelRequest>> listarSolicitacoes() {
+        logger.info("Listando todas as solicitações.");
+        List<ModelRequest> solicitacoes = modelRequestService.listarSolicitacoes();
+        logger.info("Solicitações encontradas: " + solicitacoes.size());
+        return ResponseEntity.ok(solicitacoes);
     }
 }
