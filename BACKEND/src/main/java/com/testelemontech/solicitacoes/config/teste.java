@@ -24,7 +24,7 @@ public class teste {
 
     @PostConstruct
     public void logVariaveis() {
-        System.out.println("🚀 Testando as variáveis de ambiente:");
+        System.out.println(" Testando as variáveis de ambiente:");
         System.out.println("soap.keyClient = " + keyClient);
         System.out.println("soap.username = " + username);
         System.out.println("soap.password = " + password);
@@ -55,13 +55,13 @@ public class teste {
 
             // Verifica se a resposta foi bem-sucedida (200 OK)
             if (responseCode == HttpURLConnection.HTTP_OK) {
-                System.out.println("✅ A URL está acessível! Código de resposta: " + responseCode);
+                System.out.println(" A URL está acessível! Código de resposta: " + responseCode);
             } else {
-                System.out.println("❌ Falha ao acessar a URL. Código de resposta: " + responseCode);
+                System.out.println(" Falha ao acessar a URL. Código de resposta: " + responseCode);
             }
 
         } catch (IOException e) {
-            System.out.println("❌ Erro ao verificar a URL: " + e.getMessage());
+            System.out.println(" Erro ao verificar a URL: " + e.getMessage());
         }
     }
 }
