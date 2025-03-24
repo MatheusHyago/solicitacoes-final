@@ -13,6 +13,10 @@ public class ModelRequest {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @NotBlank(message = "Código da solicitação é obrigatório")
+    @Column(nullable = false, unique = true)
+    private String codigoSolicitacao; // Identificador único da solicitação
+
     @NotBlank(message = "Nome do passageiro é obrigatório")
     @Column(nullable = false)
     private String nomePassageiro;
@@ -42,13 +46,13 @@ public class ModelRequest {
     private LocalDateTime dataSolicitacao;
 
     // Construtor vazio (obrigatório para JPA)
-    public ModelRequest() {
-    }
+    public ModelRequest() {}
 
     // Construtor com todos os atributos
-    public ModelRequest(String nomePassageiro, String ciaAerea, LocalDateTime dataHoraSaida,
+    public ModelRequest(String codigoSolicitacao, String nomePassageiro, String ciaAerea, LocalDateTime dataHoraSaida,
                         LocalDateTime dataHoraChegada, String cidadeOrigem, String cidadeDestino,
                         LocalDateTime dataSolicitacao) {
+        this.codigoSolicitacao = codigoSolicitacao;
         this.nomePassageiro = nomePassageiro;
         this.ciaAerea = ciaAerea;
         this.dataHoraSaida = dataHoraSaida;
@@ -61,6 +65,9 @@ public class ModelRequest {
     // Getters e Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
+
+    public String getCodigoSolicitacao() { return codigoSolicitacao; }
+    public void setCodigoSolicitacao(String codigoSolicitacao) { this.codigoSolicitacao = codigoSolicitacao; }
 
     public String getNomePassageiro() { return nomePassageiro; }
     public void setNomePassageiro(String nomePassageiro) { this.nomePassageiro = nomePassageiro; }
@@ -88,6 +95,7 @@ public class ModelRequest {
     public String toString() {
         return "ModelRequest{" +
                 "id=" + id +
+                ", codigoSolicitacao='" + codigoSolicitacao + '\'' +
                 ", nomePassageiro='" + nomePassageiro + '\'' +
                 ", ciaAerea='" + ciaAerea + '\'' +
                 ", dataHoraSaida=" + dataHoraSaida +

@@ -51,4 +51,22 @@ public class ModelRequestController {
         }
         return ResponseEntity.ok(importadas);
     }
+
+    /**
+     * 🔄 Sincroniza as solicitações existentes no banco com as informações do serviço SOAP.
+     * @return Lista de ModelRequest sincronizadas.
+     */
+    @PostMapping("/sincronizar")
+    public ResponseEntity<List<ModelRequest>> sincronizarSolicitacoes() {
+        logger.info("🔄 Requisição para sincronizar solicitações recebida.");
+
+        // Chama o serviço para sincronizar os dados
+        List<ModelRequest> sincronizadas = modelRequestService.sincronizarSolicitacoesDaLemontech();
+
+        if (sincronizadas.isEmpty()) {
+            logger.warn("⚠️ Nenhuma solicitação foi sincronizada.");
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(sincronizadas);
+    }
 }
