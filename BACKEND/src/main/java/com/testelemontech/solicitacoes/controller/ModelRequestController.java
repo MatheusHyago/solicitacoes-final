@@ -21,19 +21,34 @@ public class ModelRequestController {
     }
 
     /**
-     * Endpoint para importar solicitações da Lemontech.
+     * 🔍 Retorna todas as solicitações salvas no banco de dados.
+     * @return Lista de ModelRequest.
+     */
+    @GetMapping
+    public ResponseEntity<List<ModelRequest>> listarTodas() {
+        logger.info("📨 Requisição para listar todas as solicitações recebida.");
+        List<ModelRequest> solicitacoes = modelRequestService.listarTodas();
+
+        if (solicitacoes.isEmpty()) {
+            logger.warn("⚠️ Nenhuma solicitação encontrada no banco.");
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.ok(solicitacoes);
+    }
+
+    /**
+     * 🔄 Importa novas solicitações via SOAP e salva no banco.
+     * @return Lista de ModelRequest importadas.
      */
     @PostMapping("/importar")
     public ResponseEntity<List<ModelRequest>> importarSolicitacoes() {
         logger.info("📨 Requisição para importar solicitações recebida.");
-
         List<ModelRequest> importadas = modelRequestService.importarSolicitacoesDaLemontech();
 
-        if (!importadas.isEmpty()) {
-            return ResponseEntity.ok(importadas);  // Retorna a lista de solicitações importadas
+        if (importadas.isEmpty()) {
+            logger.warn("⚠️ Nenhuma nova solicitação importada.");
+            return ResponseEntity.noContent().build();
         }
-
-        return ResponseEntity.noContent().build();  // Retorna 204 se nenhuma nova solicitação for importada
+        return ResponseEntity.ok(importadas);
     }
-
 }

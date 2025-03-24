@@ -11,7 +11,6 @@ import org.springframework.ws.client.core.WebServiceMessageCallback;
 import org.springframework.ws.client.core.WebServiceTemplate;
 import org.springframework.ws.soap.SoapHeader;
 import org.springframework.ws.soap.SoapMessage;
-
 import jakarta.xml.bind.JAXBElement;
 import javax.xml.namespace.QName;
 import java.time.LocalDateTime;
@@ -22,7 +21,6 @@ import java.util.stream.Collectors;
 
 @Component
 public class WsClient {
-
     private static final Logger logger = LoggerFactory.getLogger(WsClient.class);
     private final WebServiceTemplate webServiceTemplate;
 
@@ -44,60 +42,52 @@ public class WsClient {
 
     public List<ModelRequest> buscarProdutosAereos(LocalDateTime startDate, LocalDateTime endDate) {
         try {
-            logger.info("📨 Enviando requisição SOAP para {} com datas: {} a {}", wsdlUrl, startDate, endDate);
-
+            logger.info("Enviando requisição SOAP para {} com datas: {} a {}", wsdlUrl, startDate, endDate);
             PesquisarSolicitacaoRequest request = buildRequest(startDate, endDate);
-
-            // Use o mesmo namespace e prefixo "ser" conforme o esperado
-            String ns = "http://lemontech.com.br/selfbooking/wsselfbooking/services";
-            QName qName = new QName(ns, "pesquisarSolicitacao", "ser");
+            QName qName = new QName("http://lemontech.com.br/selfbooking/wsselfbooking/services", "pesquisarSolicitacao");
             JAXBElement<PesquisarSolicitacaoRequest> jaxbRequest = new JAXBElement<>(qName, PesquisarSolicitacaoRequest.class, request);
 
-            // Configurar o cabeçalho SOAP com o prefixo "ser"
             WebServiceMessageCallback callback = message -> {
                 SoapMessage soapMessage = (SoapMessage) message;
                 SoapHeader soapHeader = soapMessage.getSoapHeader();
-                // Utiliza o mesmo namespace e prefixo "ser" conforme o modelo
+                String ns = "http://lemontech.com.br/selfbooking/wsselfbooking/services";
                 soapHeader.addHeaderElement(new QName(ns, "userPassword", "ser")).setText(password);
                 soapHeader.addHeaderElement(new QName(ns, "userName", "ser")).setText(username);
                 soapHeader.addHeaderElement(new QName(ns, "keyClient", "ser")).setText(keyClient);
             };
 
-            PesquisarSolicitacaoResponse response = (PesquisarSolicitacaoResponse)
+            JAXBElement<PesquisarSolicitacaoResponse> response = (JAXBElement<PesquisarSolicitacaoResponse>)
                     webServiceTemplate.marshalSendAndReceive(wsdlUrl, jaxbRequest, callback);
 
-            logger.info("✅ Resposta SOAP recebida com sucesso!");
-            return processarResposta(response);
+            logger.info("Resposta SOAP recebida com sucesso!");
+            return processarResposta(response.getValue());
         } catch (Exception e) {
-            logger.error("❌ Erro ao buscar produtos aéreos via SOAP: {}", e.getMessage(), e);
+            logger.error("Erro ao buscar produtos aéreos via SOAP: {}", e.getMessage(), e);
             return List.of();
         }
     }
 
     private PesquisarSolicitacaoRequest buildRequest(LocalDateTime startDate, LocalDateTime endDate) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
-
         PesquisarSolicitacaoRequest request = new PesquisarSolicitacaoRequest();
-        String ns = "http://lemontech.com.br/selfbooking/wsselfbooking/services";
-
-        request.getContent().add(new JAXBElement<>(new QName(ns, "version", "ser"), String.class, "2.3.1"));
-        request.getContent().add(new JAXBElement<>(new QName(ns, "dataInicial", "ser"), String.class, startDate.format(formatter)));
-        request.getContent().add(new JAXBElement<>(new QName(ns, "dataFinal", "ser"), String.class, endDate.format(formatter)));
-        request.getContent().add(new JAXBElement<>(new QName(ns, "registroInicial", "ser"), Integer.class, 1));
-        request.getContent().add(new JAXBElement<>(new QName(ns, "quantidadeRegistros", "ser"), Integer.class, 50));
-        request.getContent().add(new JAXBElement<>(new QName(ns, "sincronizado", "ser"), Boolean.class, false));
-        request.getContent().add(new JAXBElement<>(new QName(ns, "exibirRemarks", "ser"), Boolean.class, true));
-        request.getContent().add(new JAXBElement<>(new QName(ns, "exibirAprovadas", "ser"), Boolean.class, false));
-        request.getContent().add(new JAXBElement<>(new QName(ns, "tipoSolicitacao", "ser"), String.class, "TODOS"));
-
+        request.getContent().add(new JAXBElement<>(new QName("dataInicial"), String.class, startDate.format(formatter)));
+        request.getContent().add(new JAXBElement<>(new QName("dataFinal"), String.class, endDate.format(formatter)));
+        request.getContent().add(new JAXBElement<>(new QName("registroInicial"), Integer.class, 1));
+        request.getContent().add(new JAXBElement<>(new QName("quantidadeRegistros"), Integer.class, 50));
+        request.getContent().add(new JAXBElement<>(new QName("sincronizado"), Boolean.class, false));
+        request.getContent().add(new JAXBElement<>(new QName("exibirRemarks"), Boolean.class, true));
+        request.getContent().add(new JAXBElement<>(new QName("exibirAprovadas"), Boolean.class, false));
+        request.getContent().add(new JAXBElement<>(new QName("tipoSolicitacao"), String.class, "TODOS"));
+        request.getContent().add(new JAXBElement<>(new QName("version"), String.class, "2.3.1"));
         return request;
     }
 
     private List<ModelRequest> processarResposta(PesquisarSolicitacaoResponse response) {
         if (response == null || response.getSolicitacao() == null || response.getSolicitacao().isEmpty()) {
-            logger.warn("⚠️ Nenhuma solicitação de viagem encontrada!");
+            logger.warn("Nenhuma solicitação de viagem encontrada!");
             return List.of();
         }
+
         return response.getSolicitacao().stream()
                 .map(solicitacao -> {
                     ModelRequest model = new ModelRequest();
