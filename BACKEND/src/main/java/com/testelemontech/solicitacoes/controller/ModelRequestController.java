@@ -56,7 +56,7 @@ public class ModelRequestController {
      * 🔄 Sincroniza as solicitações existentes no banco com as informações do serviço SOAP.
      * @return Lista de ModelRequest sincronizadas.
      */
-    @PostMapping("/sincronizar")
+    @PostMapping("/sincroniza")
     public ResponseEntity<List<ModelRequest>> sincronizarSolicitacoes() {
         logger.info("🔄 Requisição para sincronizar solicitações recebida.");
 
