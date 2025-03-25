@@ -12,19 +12,28 @@ public class WsConfig {
     @Value("${soap.wsdlUrl}")
     private String wsdlUrl;
 
+    /**
+     * Cria e configura o marshaller para serializar/deserializar objetos Java para XML.
+     *
+     * @return Instância configurada do Jaxb2Marshaller.
+     */
     @Bean
     public Jaxb2Marshaller marshaller() {
         Jaxb2Marshaller marshaller = new Jaxb2Marshaller();
-        marshaller.setContextPath("com.testelemontech.solicitacoes.wsdl");
+        marshaller.setContextPath("com.testelemontech.solicitacoes.wsdl"); // Ajuste conforme o pacote das classes geradas
         return marshaller;
     }
 
+    /**
+     * Cria e configura o WebServiceTemplate para enviar requisições SOAP.
+     *
+     * @param marshaller Instância do marshaller.
+     * @return WebServiceTemplate configurado.
+     */
     @Bean
     public WebServiceTemplate webServiceTemplate(Jaxb2Marshaller marshaller) {
-        WebServiceTemplate webServiceTemplate = new WebServiceTemplate();
-        webServiceTemplate.setDefaultUri(wsdlUrl);
-        webServiceTemplate.setMarshaller(marshaller);
-        webServiceTemplate.setUnmarshaller(marshaller);
-        return webServiceTemplate;
+        WebServiceTemplate template = new WebServiceTemplate(marshaller);
+        template.setDefaultUri(wsdlUrl);  // URL do WSDL
+        return template;
     }
 }

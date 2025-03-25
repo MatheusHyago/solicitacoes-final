@@ -8,11 +8,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.ws.WebServiceMessage;
-import org.springframework.ws.WebServiceMessageCallback;
+import org.springframework.ws.client.core.WebServiceMessageCallback;
 import org.springframework.ws.client.core.WebServiceTemplate;
 import org.springframework.ws.soap.SoapHeader;
 import org.springframework.ws.soap.SoapMessage;
 
+import jakarta.xml.bind.JAXBElement;  // Usando jakarta.xml.bind
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
 import javax.xml.namespace.QName;
@@ -26,6 +27,7 @@ import java.util.List;
 public class WsClient {
 
     private static final Logger logger = LoggerFactory.getLogger(WsClient.class);
+
     // Namespace conforme o WSDL – ajuste se necessário.
     private static final String NAMESPACE = "http://lemontech.com.br/selfbooking/wsselfbooking/services";
 
@@ -50,10 +52,6 @@ public class WsClient {
     /**
      * Realiza a chamada SOAP para buscar as solicitações entre duas datas.
      *
-     * Nota: Este método assume que a classe PesquisarSolicitacaoRequest gerada possui
-     * os métodos setDataInicial(), setDataFinal(), setRegistroInicial() e setQuantidadeRegistros().
-     * Caso contrário, ajuste para utilizar os getters para a lista de conteúdo (ex.: request.getContent().add(...)).
-     *
      * @param dataInicio Data inicial da pesquisa.
      * @param dataFim    Data final da pesquisa.
      * @return Lista de objetos Solicitacao retornados no response.
@@ -64,11 +62,12 @@ public class WsClient {
 
             // Cria e configura o request
             PesquisarSolicitacaoRequest request = new PesquisarSolicitacaoRequest();
-            // Se os setters diretos existirem:
-            request.setDataInicial(convertToXMLGregorianCalendar(dataInicio));
-            request.setDataFinal(convertToXMLGregorianCalendar(dataFim));
-            request.setRegistroInicial(1);
-            request.setQuantidadeRegistros(50);
+
+            // Adicionando os campos na lista content usando Jakarta JAXB
+            request.getContent().add(new JAXBElement<>(new QName(NAMESPACE, "dataInicial"), XMLGregorianCalendar.class, convertToXMLGregorianCalendar(dataInicio)));
+            request.getContent().add(new JAXBElement<>(new QName(NAMESPACE, "dataFinal"), XMLGregorianCalendar.class, convertToXMLGregorianCalendar(dataFim)));
+            request.getContent().add(new JAXBElement<>(new QName(NAMESPACE, "registroInicial"), Integer.class, 1));
+            request.getContent().add(new JAXBElement<>(new QName(NAMESPACE, "quantidadeRegistros"), Integer.class, 50));
 
             // Callback para injetar os headers SOAP
             WebServiceMessageCallback callback = new WebServiceMessageCallback() {

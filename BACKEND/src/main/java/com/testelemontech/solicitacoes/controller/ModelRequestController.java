@@ -5,15 +5,13 @@ import com.testelemontech.solicitacoes.service.ModelRequestService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.ResponseEntity;
 
 import java.util.List;
 
 /**
- * Controller para gerenciar as solicitações.
- *
- * Endpoints:
- * - GET /api/model-requests/sincronizar: Sincroniza as solicitações do WS (busca, salva e retorna)
- * - GET /api/model-requests: Retorna todas as solicitações persistidas no banco
+ * - GET /solicitacoes: Exibe todas as solicitações persistidas no banco.
+ * - GET /sincronizar: Sincroniza solicitações do WebService e salva no banco.
  */
 @RestController
 @RequestMapping("solicitacoes")
@@ -25,14 +23,25 @@ public class ModelRequestController {
         this.service = service;
     }
 
-
-    @GetMapping("/sincronizar")
-    public List<ModelRequest> sincronizarSolicitacoes() {
-        return service.buscarESalvarSolicitacoes();
+    // Endpoint para exibir todas as solicitações persistidas no banco
+    @GetMapping
+    public ResponseEntity<List<ModelRequest>> exibirSolicitacoes() {
+        try {
+            List<ModelRequest> solicitacoes = service.buscarTodasSolicitacoes(); // Busca no banco
+            return ResponseEntity.ok(solicitacoes);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(null);  // Retorna erro em caso de falha
+        }
     }
 
-    @GetMapping
-    public List<ModelRequest> getAllModelRequests() {
-        return service.listarSolicitacoes();
+    // Endpoint para sincronizar as solicitações via WebService e salvar no banco
+    @GetMapping("/sincronizar")
+    public ResponseEntity<List<ModelRequest>> sincronizarSolicitacoes() {
+        try {
+            List<ModelRequest> solicitacoes = service.importarSolicitacoesDaLemontech(); // Chama o serviço para sincronizar e salvar
+            return ResponseEntity.ok(solicitacoes);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(null);  // Retorna erro em caso de falha
+        }
     }
 }

@@ -8,5 +8,6 @@ public class SolicitacoesApplicationTests {
 
 	@Test
 	void contextLoads() {
+		// Este teste verifica se o contexto da aplicação é carregado corretamente
 	}
 }

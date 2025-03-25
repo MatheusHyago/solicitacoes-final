@@ -3,7 +3,7 @@ package com.testelemontech.solicitacoes.controller;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;  // Alterado para Jakarta
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;

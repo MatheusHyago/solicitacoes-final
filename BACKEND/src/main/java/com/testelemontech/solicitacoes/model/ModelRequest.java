@@ -1,6 +1,8 @@
 package com.testelemontech.solicitacoes.model;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.CreationTimestamp;
+
 import java.time.LocalDateTime;
 
 @Entity
@@ -11,17 +13,32 @@ public class ModelRequest {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false, unique = true)
     private String codigoSolicitacao;
+
+    @Column(nullable = false)
     private String nomePassageiro;
+
+    @Column(nullable = false)
     private String ciaAerea;
+
+    @Column(nullable = false)
     private String cidadeOrigem;
+
+    @Column(nullable = false)
     private String cidadeDestino;
+
+    @Column(nullable = false)
     private LocalDateTime dataHoraSaida;
+
+    @Column(nullable = false)
     private LocalDateTime dataHoraChegada;
+
+    @CreationTimestamp
+    @Column(updatable = false, nullable = false)
     private LocalDateTime dataSolicitacao;
 
     // Getters e Setters
-
     public Long getId() {
         return id;
     }
