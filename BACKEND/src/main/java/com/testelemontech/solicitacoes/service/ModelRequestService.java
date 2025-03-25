@@ -3,93 +3,55 @@ package com.testelemontech.solicitacoes.service;
 import com.testelemontech.solicitacoes.config.WsClient;
 import com.testelemontech.solicitacoes.model.ModelRequest;
 import com.testelemontech.solicitacoes.repository.ModelRequestRepository;
-import com.testelemontech.solicitacoes.wsdl.PesquisarConciliacaoCartaoResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
+import com.testelemontech.solicitacoes.wsdl.Solicitacao;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
 public class ModelRequestService {
 
     private static final Logger logger = LoggerFactory.getLogger(ModelRequestService.class);
+
     private final WsClient wsClient;
     private final ModelRequestRepository repository;
 
-    public ModelRequestService(WsClient wsClient, ModelRequestRepository repository) {
+    public ModelRequestService(com.testelemontech.solicitacoes.config.WsClient wsClient, ModelRequestRepository repository) {
         this.wsClient = wsClient;
         this.repository = repository;
     }
 
-    // Salva uma nova solicitação
-    public ModelRequest salvarSolicitacao(ModelRequest modelRequest) {
-        return repository.save(modelRequest);
-    }
+    public List<ModelRequest> getModelRequest() {
+        LocalDate endDate = LocalDate.now();
+        LocalDate startDate = endDate.minusMonths(3);
 
-    // Retorna todas as solicitações salvas
-    public List<ModelRequest> listarSolicitacoes() {
-        return repository.findAll();
-    }
+        logger.info("Fetching travel requests from SOAP service between {} and {}", startDate, endDate);
+        List<Solicitacao> solicitacoesWS = wsClient.pesquisarSolicitacoes(startDate, endDate);
 
-    // Retorna uma solicitação pelo ID
-    public Optional<ModelRequest> buscarSolicitacaoPorId(Long id) {
-        return repository.findById(id);
-    }
-
-    // Exclui uma solicitação pelo ID
-    public void excluirSolicitacao(Long id) {
-        repository.deleteById(id);
-    }
-
-    // Importa solicitações via SOAP e salva no banco
-    @Transactional
-    public List<ModelRequest> buscarESalvarSolicitacoes() {
-        logger.info("Iniciando importação de solicitações da Lemontech...");
-
-        // ✅ Corrigido para usar Integer e LocalDate
-        Integer codigoEmpresa = 12345;
-        LocalDate dataAtual = LocalDate.now();
-        String uf = "SP";
-
-        List<PesquisarConciliacaoCartaoResponse> responses = wsClient.buscarConciliacaoCartao(codigoEmpresa, dataAtual, uf);
-
-        List<ModelRequest> modelRequests = responses.stream()
-                .map(this::toModelRequest)
+        List<ModelRequest> travelRequests = solicitacoesWS.stream()
+                .map(this::convertToTravelRequest)
                 .collect(Collectors.toList());
 
-        if (!modelRequests.isEmpty()) {
-            repository.saveAll(modelRequests);
-            logger.info("Importação concluída com sucesso. {} solicitações importadas.", modelRequests.size());
+        if (!travelRequests.isEmpty()) {
+            repository.saveAll(travelRequests);
+            logger.info("Salva {} Requisições", getModelRequest().size());
         } else {
-            logger.warn("Nenhuma solicitação importada.");
+            logger.warn("No travel requests found to save.");
         }
-
-        return modelRequests;
+        return travelRequests;
     }
 
-    // Converte resposta do WS para ModelRequest
-    private ModelRequest toModelRequest(PesquisarConciliacaoCartaoResponse response) {
-        LocalDateTime agora = LocalDateTime.now();
+    private ModelRequest convertToTravelRequest(Solicitacao solicitacao) {
+        ModelRequest travelRequest = new ModelRequest();
 
-        ModelRequest model = new ModelRequest();
+        travelRequest.setCodigoSolicitacao(String.valueOf(solicitacao.getIdSolicitacao()));  // Correct setter
+        travelRequest.setNomePassageiro(solicitacao.getSolicitante() != null ? solicitacao.getSolicitante().getNome() : "Unknown"); // Correct setter
+        travelRequest.setDataSolicitacao(LocalDate.now().atStartOfDay());  // Assuming you're using LocalDateTime for dataSolicitacao
 
-        // ✅ Corrigido para usar `setCodigoSolicitacao`
-        model.setCodigoSolicitacao(response.getNumeroConciliacoes() != null
-                ? response.getNumeroConciliacoes().toString()
-                : "N/A");
-        model.setNomePassageiro("Nome Exemplo");
-        model.setCiaAerea("Cia Exemplo");
-        model.setCidadeOrigem("Origem Exemplo");
-        model.setCidadeDestino("Destino Exemplo");
-        model.setDataHoraSaida(agora);
-        model.setDataHoraChegada(agora);
-        model.setDataSolicitacao(agora);
-        return model;
+        return travelRequest;
     }
 }
