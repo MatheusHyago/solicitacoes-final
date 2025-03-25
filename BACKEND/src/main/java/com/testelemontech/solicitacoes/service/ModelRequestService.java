@@ -79,8 +79,8 @@ public class ModelRequestService {
 
         ModelRequest model = new ModelRequest();
 
-        // ✅ Certifique-se de que `setCodigoSolicitacao` existe na classe ModelRequest
-        model.setCodigo(response.getNumeroConciliacoes() != null
+        // ✅ Corrigido para usar `setCodigoSolicitacao`
+        model.setCodigoSolicitacao(response.getNumeroConciliacoes() != null
                 ? response.getNumeroConciliacoes().toString()
                 : "N/A");
         model.setNomePassageiro("Nome Exemplo");
