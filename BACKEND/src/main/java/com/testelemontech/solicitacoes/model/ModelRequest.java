@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 public class ModelRequest {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY) // Gera um ID automaticamente no banco
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String codigoSolicitacao;

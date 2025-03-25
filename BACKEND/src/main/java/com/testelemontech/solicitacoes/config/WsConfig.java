@@ -15,12 +15,7 @@ public class WsConfig {
     @Bean
     public Jaxb2Marshaller marshaller() {
         Jaxb2Marshaller marshaller = new Jaxb2Marshaller();
-        // Ajuste o pacote para onde as classes geradas pelo WSDL estão
         marshaller.setContextPath("com.testelemontech.solicitacoes.wsdl");
-        marshaller.setClassesToBeBound(
-                com.testelemontech.solicitacoes.wsdl.PesquisarConciliacaoCartaoRequest.class,
-                com.testelemontech.solicitacoes.wsdl.PesquisarConciliacaoCartaoResponse.class
-        );
         return marshaller;
     }
 
