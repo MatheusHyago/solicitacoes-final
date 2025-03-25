@@ -52,7 +52,6 @@ public class ModelRequestService {
     public List<ModelRequest> buscarESalvarSolicitacoes() {
         logger.info("Iniciando importação de solicitações da Lemontech...");
 
-        // ✅ Corrigido para usar Integer e LocalDate
         Integer codigoEmpresa = 12345;
         LocalDate dataAtual = LocalDate.now();
         String uf = "SP";
@@ -79,8 +78,7 @@ public class ModelRequestService {
 
         ModelRequest model = new ModelRequest();
 
-        // ✅ Certifique-se de que `setCodigoSolicitacao` existe na classe ModelRequest
-        model.setCodigo(response.getNumeroConciliacoes() != null
+        model.setCodigoSolicitacao(response.getNumeroConciliacoes() != null
                 ? response.getNumeroConciliacoes().toString()
                 : "N/A");
         model.setNomePassageiro("Nome Exemplo");
