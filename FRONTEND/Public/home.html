@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Gerenciamento de Solicitações de Viagem</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <h1>Solicitações de Viagem</h1>
+  </header>
+
+  <section class="form-section">
+    <h2>Adicionar Nova Solicitação</h2>
+    <form id="solicitacaoForm" onsubmit="event.preventDefault(); adicionarSolicitacao();">
+      <label for="nomePassageiro">Nome do Passageiro:</label>
+      <input type="text" id="nomePassageiro" required>
+
+      <label for="dataHoraSaida">Data/Hora Saída:</label>
+      <input type="datetime-local" id="dataHoraSaida" required>
+
+      <label for="dataHoraChegada">Data/Hora Chegada:</label>
+      <input type="datetime-local" id="dataHoraChegada" required>
+
+      <label for="cidadeOrigem">Cidade Origem:</label>
+      <input type="text" id="cidadeOrigem" required>
+
+      <label for="cidadeDestino">Cidade Destino:</label>
+      <input type="text" id="cidadeDestino" required>
+
+      <label for="ciaAerea">CIA Aérea:</label>
+      <input type="text" id="ciaAerea" required>
+
+      <button type="submit">Adicionar Solicitação</button>
+    </form>
+    <button id="btnGerar" onclick="gerarSolicitacoes()">Gerar Solicitações Fictícias</button>
+  </section>
+
+  <section class="list-section">
+    <h2>Lista de Solicitações</h2>
+    <ul id="solicitacoesList">
+      <!-- Os itens de solicitação serão inseridos aqui -->
+    </ul>
+  </section>
+
+  <script src="app.js"></script>
+</body>
+</html>
