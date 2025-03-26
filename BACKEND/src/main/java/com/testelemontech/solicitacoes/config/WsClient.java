@@ -1,96 +1,117 @@
 package com.testelemontech.solicitacoes.config;
 
-import com.testelemontech.solicitacoes.wsdl.PesquisarSolicitacaoRequest;
-import com.testelemontech.solicitacoes.wsdl.PesquisarSolicitacaoResponse;
-import com.testelemontech.solicitacoes.wsdl.Solicitacao;
+import br.com.lemontech.selfbooking.wsselfbooking.services.request.PesquisarSolicitacaoRequest;
+import br.com.lemontech.selfbooking.wsselfbooking.services.response.PesquisarSolicitacaoResponse;
+import br.com.lemontech.selfbooking.wsselfbooking.beans.Solicitacao;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.ws.client.core.WebServiceTemplate;
-import org.springframework.ws.soap.SoapHeader;
+import org.springframework.ws.soap.client.core.SoapActionCallback;
+import org.springframework.ws.WebServiceMessage;
 import org.springframework.ws.soap.SoapMessage;
+import org.springframework.ws.soap.SoapHeader;
 
-import javax.xml.datatype.DatatypeFactory;
-import javax.xml.datatype.XMLGregorianCalendar;
 import javax.xml.namespace.QName;
 import jakarta.xml.bind.JAXBElement;
+import javax.xml.datatype.DatatypeFactory;
+import javax.xml.datatype.XMLGregorianCalendar;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.GregorianCalendar;
 import java.util.List;
 
 @Service
-@ConfigurationProperties(prefix = "soap")
 public class WsClient {
 
+    // Inicialização do Logger
     private static final Logger logger = LoggerFactory.getLogger(WsClient.class);
+    private static final String NAMESPACE = "http://lemontech.com.br/selfbooking/wsselfbooking/services";
 
     private final WebServiceTemplate webServiceTemplate;
-    private String wsdlUrl;
+
+    // Variáveis de ambiente carregadas do application.properties
+    @Value("${soap.keyClient}")
     private String keyClient;
+
+    @Value("${soap.username}")
     private String username;
+
+    @Value("${soap.password}")
     private String password;
 
-    @Autowired
+    @Value("${soap.wsdlUrl}")
+    private String wsdlUrl;
+
     public WsClient(WebServiceTemplate webServiceTemplate) {
         this.webServiceTemplate = webServiceTemplate;
     }
 
-    public void setWsdlUrl(String wsdlUrl) {
-        this.wsdlUrl = wsdlUrl;
-        logger.info("Configuração da URL WSDL: {}", wsdlUrl);
-    }
-
-    public void setKeyClient(String keyClient) { this.keyClient = keyClient; }
-    public void setUsername(String username) { this.username = username; }
-    public void setPassword(String password) { this.password = password; }
-
-    public List<Solicitacao> pesquisarSolicitacoes(LocalDate dataInicial, LocalDate dataFinal) {
-        PesquisarSolicitacaoRequest request = buildRequest(dataInicial, dataFinal);
-        return sendRequest(request);
-    }
-
-    private List<Solicitacao> sendRequest(PesquisarSolicitacaoRequest request) {
+    public List<Solicitacao> pesquisarSolicitacoes(LocalDate dataInicio, LocalDate dataFim) {
         try {
-            PesquisarSolicitacaoResponse response = (PesquisarSolicitacaoResponse)
-                    webServiceTemplate.marshalSendAndReceive(wsdlUrl, request, this::addSoapHeaders);
-            return response != null ? response.getSolicitacao() : List.of();
+            // Logs detalhados para depuração
+            logger.info("Iniciando requisição SOAP para o período {} a {}", dataInicio, dataFim);
+            PesquisarSolicitacaoRequest request = criarRequest(dataInicio, dataFim);
+            logger.info("Request SOAP criado: {}", request);
+
+            // Garantir que a URL não tenha espaços extras
+            String sanitizedWsdlUrl = wsdlUrl.trim();
+            logger.info("URL WSDL sendo utilizada: {}", sanitizedWsdlUrl);
+
+            // Enviando a requisição com cabeçalho
+            PesquisarSolicitacaoResponse response = (PesquisarSolicitacaoResponse) webServiceTemplate.marshalSendAndReceive(
+                    sanitizedWsdlUrl,  // URL do WSDL carregada do arquivo properties
+                    request,
+                    new SoapActionCallback("") {
+                        @Override
+                        public void doWithMessage(WebServiceMessage message) {
+                            SoapMessage soapMessage = (SoapMessage) message;
+                            SoapHeader header = soapMessage.getSoapHeader();
+
+                            // Adicionando os cabeçalhos SOAP com as credenciais
+                            QName keyClientQName = new QName("http://lemontech.com.br/selfbooking/wsselfbooking/services", "keyClient");
+                            header.addHeaderElement(keyClientQName).setText(keyClient);
+
+                            QName usernameQName = new QName("http://lemontech.com.br/selfbooking/wsselfbooking/services", "username");
+                            header.addHeaderElement(usernameQName).setText(username);
+
+                            QName passwordQName = new QName("http://lemontech.com.br/selfbooking/wsselfbooking/services", "password");
+                            header.addHeaderElement(passwordQName).setText(password);
+
+                            logger.info("Cabeçalhos SOAP enviados: keyClient={}, username={}", keyClient, username);
+                        }
+                    });
+
+            if (response != null && response.getSolicitacao() != null) {
+                logger.info("Número de solicitações recebidas: {}", response.getSolicitacao().size());
+                return response.getSolicitacao();
+            } else {
+                logger.warn("A resposta SOAP não contém solicitações.");
+                return List.of(); // Retorna uma lista vazia
+            }
         } catch (Exception e) {
-            logger.error("Erro ao buscar solicitações: {}", e.getMessage(), e);
-            return List.of();
+            logger.error("Erro ao buscar solicitações via SOAP: ", e);
+            throw new RuntimeException("Erro na chamada SOAP", e);
         }
     }
 
-    private void addSoapHeaders(org.springframework.ws.WebServiceMessage message) {
-        SoapHeader soapHeader = ((SoapMessage) message).getSoapHeader();
-        String ns = "http://lemontech.com.br/selfbooking/wsselfbooking/services";
-        soapHeader.addHeaderElement(new QName(ns, "userName")).setText(username);
-        soapHeader.addHeaderElement(new QName(ns, "userPassword")).setText(password);
-        soapHeader.addHeaderElement(new QName(ns, "keyClient")).setText(keyClient);
-    }
-
-    private PesquisarSolicitacaoRequest buildRequest(LocalDate dataInicial, LocalDate dataFinal) {
+    private PesquisarSolicitacaoRequest criarRequest(LocalDate dataInicio, LocalDate dataFim) {
         PesquisarSolicitacaoRequest request = new PesquisarSolicitacaoRequest();
-        request.getContent().add(createJAXBElement("dataInicial", convertToXMLGregorianCalendar(dataInicial)));
-        request.getContent().add(createJAXBElement("dataFinal", convertToXMLGregorianCalendar(dataFinal)));
-        request.getContent().add(createJAXBElement("registroInicial", 1));  // Valor fixo como exemplo
+        request.getContent().add(new JAXBElement<>(new QName(NAMESPACE, "dataInicial"), XMLGregorianCalendar.class, convertToXMLGregorianCalendar(dataInicio)));
+        request.getContent().add(new JAXBElement<>(new QName(NAMESPACE, "dataFinal"), XMLGregorianCalendar.class, convertToXMLGregorianCalendar(dataFim)));
+        request.getContent().add(new JAXBElement<>(new QName(NAMESPACE, "registroInicial"), Integer.class, 1));
+        request.getContent().add(new JAXBElement<>(new QName(NAMESPACE, "quantidadeRegistros"), Integer.class, 50));
         return request;
-    }
-
-    private <T> JAXBElement<T> createJAXBElement(String name, T value) {
-        String ns = "http://lemontech.com.br/selfbooking/wsselfbooking/services/request";
-        return new JAXBElement<>(new QName(ns, name), (Class<T>) value.getClass(), value);
     }
 
     private XMLGregorianCalendar convertToXMLGregorianCalendar(LocalDate localDate) {
         try {
-            GregorianCalendar calendar = GregorianCalendar.from(localDate.atStartOfDay(ZoneId.systemDefault()));
-            return DatatypeFactory.newInstance().newXMLGregorianCalendar(calendar);
+            GregorianCalendar gcal = GregorianCalendar.from(localDate.atStartOfDay(ZoneId.systemDefault()));
+            return DatatypeFactory.newInstance().newXMLGregorianCalendar(gcal);
         } catch (Exception e) {
-            logger.error("Erro ao converter LocalDate para XMLGregorianCalendar", e);
-            return null;
+            logger.error("Erro convertendo LocalDate para XMLGregorianCalendar.", e);
+            throw new RuntimeException("Falha na conversão de data.", e);
         }
     }
 }
