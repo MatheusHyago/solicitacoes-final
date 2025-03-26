@@ -1,47 +1,45 @@
 package com.testelemontech.solicitacoes.controller;
 
-import com.testelemontech.solicitacoes.model.ModelRequest;
 import com.testelemontech.solicitacoes.service.ModelRequestService;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import com.testelemontech.solicitacoes.model.ModelRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-/**
- * - GET /solicitacoes: Exibe todas as solicitações persistidas no banco.
- * - GET /sincronizar: Sincroniza solicitações do WebService e salva no banco.
- */
 @RestController
 @RequestMapping("/solicitacoes")
 public class ModelRequestController {
 
-    private final ModelRequestService service;
+    private static final Logger logger = LoggerFactory.getLogger(ModelRequestController.class);
+    private final ModelRequestService modelRequestService;
 
-    public ModelRequestController(ModelRequestService service) {
-        this.service = service;
+    public ModelRequestController(ModelRequestService modelRequestService) {
+        this.modelRequestService = modelRequestService;
     }
 
-    // Endpoint para exibir as solicitações dos últimos três meses
-    @GetMapping
-    public ResponseEntity<List<ModelRequest>> exibirSolicitacoes() {
+    @GetMapping("/requisicoes")
+    public ResponseEntity<List<ModelRequest>> importarSolicitacoes() {
         try {
-            List<ModelRequest> solicitacoes = service.getSolicitacoesUltimosTresMeses(); // Busca as solicitações dos últimos três meses
-            return ResponseEntity.ok(solicitacoes);
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body(null);  // Retorna erro em caso de falha
-        }
-    }
+            logger.info("Iniciando importação das solicitações...");
 
-    // Endpoint para sincronizar as solicitações via WebService e salvar no banco
-    @GetMapping("/sincronizar")
-    public ResponseEntity<List<ModelRequest>> sincronizarSolicitacoes() {
-        try {
-            List<ModelRequest> solicitacoes = service.getSolicitacoesUltimosTresMeses(); // Chama o serviço para sincronizar e salvar
+            // Import solicitations from the service
+            List<ModelRequest> solicitacoes = modelRequestService.getModelRequest();
+
+            if (solicitacoes.isEmpty()) {
+                logger.warn("Nenhuma solicitação importada.");
+                return ResponseEntity.noContent().build();
+            }
+
+            // Returning the imported solicitations as a response with a 200 OK status
+            logger.info("Importação concluída. {} solicitações importadas.", solicitacoes.size());
             return ResponseEntity.ok(solicitacoes);
+
         } catch (Exception e) {
-            return ResponseEntity.status(500).body(null);  // Retorna erro em caso de falha
+            logger.error("Erro ao importar solicitações: {}", e.getMessage(), e);
+            return ResponseEntity.status(500).body(null);
         }
     }
 }
