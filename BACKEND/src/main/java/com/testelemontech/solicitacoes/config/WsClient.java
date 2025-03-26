@@ -1,8 +1,12 @@
 package com.testelemontech.solicitacoes.config;
 
-import com.testelemontech.solicitacoes.wsdl.PesquisarSolicitacaoRequest;
-import com.testelemontech.solicitacoes.wsdl.PesquisarSolicitacaoResponse;
-import com.testelemontech.solicitacoes.wsdl.Solicitacao;
+import br.com.lemontech.selfbooking.wsselfbooking.services.request.PesquisarSolicitacaoRequest;
+import br.com.lemontech.selfbooking.wsselfbooking.services.response.PesquisarSolicitacaoResponse;
+import br.com.lemontech.selfbooking.wsselfbooking.beans.Solicitacao;
+
+
+
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;

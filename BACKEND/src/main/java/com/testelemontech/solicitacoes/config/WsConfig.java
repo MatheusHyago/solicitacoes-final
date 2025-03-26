@@ -17,13 +17,12 @@ public class WsConfig {
      *
      * @return Instância configurada do Jaxb2Marshaller.
      */
-    @Bean
+     @Bean
     public Jaxb2Marshaller marshaller() {
         Jaxb2Marshaller marshaller = new Jaxb2Marshaller();
-        marshaller.setContextPath("com.testelemontech.solicitacoes.wsdl"); // Ajuste conforme o pacote das classes geradas
+        marshaller.setContextPath("com.testelemontech.solicitacoes.wsdl");  // Certifique-se de que esse seja o pacote correto
         return marshaller;
     }
-
     /**
      * Cria e configura o WebServiceTemplate para enviar requisições SOAP.
      *

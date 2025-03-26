@@ -6,5 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface ModelRequestRepository extends JpaRepository<ModelRequest, Long> {
-    // Aqui podem ser adicionados métodos personalizados, se necessário
+    // Métodos customizados podem ser adicionados aqui
 }
