@@ -4,6 +4,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.oxm.jaxb.Jaxb2Marshaller;
 import org.springframework.ws.client.core.WebServiceTemplate;
+import org.springframework.ws.soap.saaj.SaajSoapMessageFactory;
 
 @Configuration
 public class WsConfig {
@@ -18,7 +19,9 @@ public class WsConfig {
 
     @Bean
     public WebServiceTemplate webServiceTemplate(Jaxb2Marshaller marshaller) {
-        WebServiceTemplate webServiceTemplate = new WebServiceTemplate();
+        SaajSoapMessageFactory messageFactory = new SaajSoapMessageFactory();
+        messageFactory.afterPropertiesSet();
+        WebServiceTemplate webServiceTemplate = new WebServiceTemplate(messageFactory);
         webServiceTemplate.setMarshaller(marshaller);
         webServiceTemplate.setUnmarshaller(marshaller);
         return webServiceTemplate;

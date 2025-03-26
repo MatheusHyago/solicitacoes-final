@@ -5,24 +5,38 @@ import br.com.lemontech.selfbooking.wsselfbooking.services.response.PesquisarSol
 import br.com.lemontech.selfbooking.wsselfbooking.beans.Solicitacao;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.ws.client.core.WebServiceTemplate;
 import org.springframework.ws.soap.client.core.SoapActionCallback;
-import javax.xml.namespace.QName;
-import jakarta.xml.bind.JAXBElement;
+import org.springframework.ws.soap.saaj.SaajSoapMessage;
+
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
+import javax.xml.namespace.QName;
+import jakarta.xml.bind.JAXBElement;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.GregorianCalendar;
 import java.util.List;
-
 
 @Service
 public class WsClient {
 
     private static final Logger logger = LoggerFactory.getLogger(WsClient.class);
     private static final String NAMESPACE = "http://lemontech.com.br/selfbooking/wsselfbooking/services";
+
+    @Value("${soap.wsdlUrl}")
+    private String wsdlUrl;
+
+    @Value("${soap.keyClient}")
+    private String keyClient;
+
+    @Value("${soap.username}")
+    private String username;
+
+    @Value("${soap.password}")
+    private String password;
 
     private final WebServiceTemplate webServiceTemplate;
 
@@ -35,21 +49,28 @@ public class WsClient {
             logger.info("Iniciando requisição SOAP para o período {} a {}", dataInicio, dataFim);
 
             PesquisarSolicitacaoRequest request = criarRequest(dataInicio, dataFim);
-            logger.info("Request SOAP criado: {}", request);
+            logger.info("Request SOAP criado.");
 
-            // Enviando a requisição SOAP
+            // Enviando a requisição SOAP com os cabeçalhos
             PesquisarSolicitacaoResponse response = (PesquisarSolicitacaoResponse) webServiceTemplate.marshalSendAndReceive(
-                    "https://treinamento.lemontech.com.br/wsselfbooking/WsSelfBookingService?wsdl",
+                    wsdlUrl.trim(),
                     request,
                     new SoapActionCallback("") {
                         @Override
                         public void doWithMessage(org.springframework.ws.WebServiceMessage message) {
-                            logger.info("Requisição SOAP enviada.");
+                            try {
+                                SaajSoapMessage saajSoapMessage = (SaajSoapMessage) message;
+                                saajSoapMessage.getSoapHeader().addHeaderElement(new QName(NAMESPACE, "userPassword")).setText(password);
+                                saajSoapMessage.getSoapHeader().addHeaderElement(new QName(NAMESPACE, "userName")).setText(username);
+                                saajSoapMessage.getSoapHeader().addHeaderElement(new QName(NAMESPACE, "keyClient")).setText(keyClient);
+                                logger.info("Cabeçalhos SOAP adicionados.");
+                            } catch (Exception e) {
+                                logger.error("Erro ao adicionar cabeçalhos SOAP", e);
+                                throw new RuntimeException("Erro ao adicionar cabeçalhos SOAP", e);
+                            }
                         }
                     }
             );
-
-            logger.info("Resposta SOAP recebida: {}", response);
 
             if (response != null && response.getSolicitacao() != null) {
                 logger.info("Número de solicitações recebidas: {}", response.getSolicitacao().size());
@@ -59,7 +80,7 @@ public class WsClient {
                 return List.of();
             }
         } catch (Exception e) {
-            logger.error("Erro ao buscar solicitações via SOAP: ", e);
+            logger.error("Erro ao buscar solicitações via SOAP.", e);
             throw new RuntimeException("Erro na chamada SOAP", e);
         }
     }
