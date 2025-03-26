@@ -12,6 +12,7 @@ public class WsConfig {
     @Bean
     public Jaxb2Marshaller marshaller() {
         Jaxb2Marshaller marshaller = new Jaxb2Marshaller();
+        // Pacotes que o JAXB usará para gerar a marshalling
         marshaller.setPackagesToScan("br.com.lemontech.selfbooking.wsselfbooking.beans",
                 "br.com.lemontech.selfbooking.wsselfbooking.services.request");
         return marshaller;
@@ -25,5 +26,11 @@ public class WsConfig {
         webServiceTemplate.setMarshaller(marshaller);
         webServiceTemplate.setUnmarshaller(marshaller);
         return webServiceTemplate;
+    }
+
+    // Defina o bean para o WsSelfBookingService
+    @Bean
+    public WsSelfBookingService wsSelfBookingService() {
+        return new WsSelfBookingService();
     }
 }
