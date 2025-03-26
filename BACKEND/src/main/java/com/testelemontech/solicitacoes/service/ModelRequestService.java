@@ -2,9 +2,9 @@ package com.testelemontech.solicitacoes.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import com.testelemontech.solicitacoes.model.ModelRequest;
 import com.testelemontech.solicitacoes.repository.ModelRequestRepository;
 
+import com.testelemontech.solicitacoes.model.ModelRequest;
 import java.util.List;
 
 @Service
