@@ -5,92 +5,104 @@ import com.testelemontech.solicitacoes.wsdl.PesquisarSolicitacaoResponse;
 import com.testelemontech.solicitacoes.wsdl.Solicitacao;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.ws.WebServiceMessage;
+import org.springframework.ws.client.core.WebServiceMessageCallback;
 import org.springframework.ws.client.core.WebServiceTemplate;
 import org.springframework.ws.soap.SoapHeader;
 import org.springframework.ws.soap.SoapMessage;
 
+import jakarta.xml.bind.JAXBElement;  // Usando jakarta.xml.bind
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
 import javax.xml.namespace.QName;
-import jakarta.xml.bind.JAXBElement;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.GregorianCalendar;
 import java.util.List;
 
 @Service
-@ConfigurationProperties(prefix = "soap")
 public class WsClient {
 
     private static final Logger logger = LoggerFactory.getLogger(WsClient.class);
 
-    private final WebServiceTemplate webServiceTemplate;
+    // Namespace conforme o WSDL – ajuste se necessário.
+    private static final String NAMESPACE = "http://lemontech.com.br/selfbooking/wsselfbooking/services";
+
+    @Value("${soap.wsdlUrl}")
     private String wsdlUrl;
+
+    @Value("${soap.keyClient}")
     private String keyClient;
+
+    @Value("${soap.username}")
     private String username;
+
+    @Value("${soap.password}")
     private String password;
 
-    @Autowired
+    private final WebServiceTemplate webServiceTemplate;
+
     public WsClient(WebServiceTemplate webServiceTemplate) {
         this.webServiceTemplate = webServiceTemplate;
     }
 
-    public void setWsdlUrl(String wsdlUrl) {
-        this.wsdlUrl = wsdlUrl;
-        logger.info("Configuração da URL WSDL: {}", wsdlUrl);
-    }
-
-    public void setKeyClient(String keyClient) { this.keyClient = keyClient; }
-    public void setUsername(String username) { this.username = username; }
-    public void setPassword(String password) { this.password = password; }
-
-    public List<Solicitacao> pesquisarSolicitacoes(LocalDate dataInicial, LocalDate dataFinal) {
-        PesquisarSolicitacaoRequest request = buildRequest(dataInicial, dataFinal);
-        return sendRequest(request);
-    }
-
-    private List<Solicitacao> sendRequest(PesquisarSolicitacaoRequest request) {
+    /**
+     * Realiza a chamada SOAP para buscar as solicitações entre duas datas.
+     *
+     * @param dataInicio Data inicial da pesquisa.
+     * @param dataFim    Data final da pesquisa.
+     * @return Lista de objetos Solicitacao retornados no response.
+     */
+    public List<Solicitacao> pesquisarSolicitacoes(LocalDate dataInicio, LocalDate dataFim) {
         try {
+            logger.info("Preparando requisição SOAP para o período {} a {}", dataInicio, dataFim);
+
+            // Cria e configura o request
+            PesquisarSolicitacaoRequest request = new PesquisarSolicitacaoRequest();
+
+            // Adicionando os campos na lista content usando Jakarta JAXB
+            request.getContent().add(new JAXBElement<>(new QName(NAMESPACE, "dataInicial"), XMLGregorianCalendar.class, convertToXMLGregorianCalendar(dataInicio)));
+            request.getContent().add(new JAXBElement<>(new QName(NAMESPACE, "dataFinal"), XMLGregorianCalendar.class, convertToXMLGregorianCalendar(dataFim)));
+            request.getContent().add(new JAXBElement<>(new QName(NAMESPACE, "registroInicial"), Integer.class, 1));
+            request.getContent().add(new JAXBElement<>(new QName(NAMESPACE, "quantidadeRegistros"), Integer.class, 50));
+
+            // Callback para injetar os headers SOAP
+            WebServiceMessageCallback callback = new WebServiceMessageCallback() {
+                @Override
+                public void doWithMessage(WebServiceMessage message) throws IOException {
+                    if (message instanceof SoapMessage) {
+                        SoapMessage soapMessage = (SoapMessage) message;
+                        SoapHeader header = soapMessage.getSoapHeader();
+                        header.addHeaderElement(new QName(NAMESPACE, "userName")).setText(username);
+                        header.addHeaderElement(new QName(NAMESPACE, "userPassword")).setText(password);
+                        header.addHeaderElement(new QName(NAMESPACE, "keyClient")).setText(keyClient);
+                        logger.info("Headers SOAP adicionados.");
+                    }
+                }
+            };
+
+            logger.info("Enviando requisição SOAP para {}", wsdlUrl);
             PesquisarSolicitacaoResponse response = (PesquisarSolicitacaoResponse)
-                    webServiceTemplate.marshalSendAndReceive(wsdlUrl, request, this::addSoapHeaders);
-            return response != null ? response.getSolicitacao() : List.of();
+                    webServiceTemplate.marshalSendAndReceive(wsdlUrl, request, callback);
+
+            logger.info("Resposta SOAP recebida com sucesso.");
+            return response.getSolicitacao();
         } catch (Exception e) {
-            logger.error("Erro ao buscar solicitações: {}", e.getMessage(), e);
-            return List.of();
+            logger.error("Erro na chamada SOAP: {}", e.getMessage(), e);
+            throw new RuntimeException("Erro ao buscar solicitações via SOAP.", e);
         }
-    }
-
-    private void addSoapHeaders(org.springframework.ws.WebServiceMessage message) {
-        SoapHeader soapHeader = ((SoapMessage) message).getSoapHeader();
-        String ns = "http://lemontech.com.br/selfbooking/wsselfbooking/services";
-        soapHeader.addHeaderElement(new QName(ns, "userName")).setText(username);
-        soapHeader.addHeaderElement(new QName(ns, "userPassword")).setText(password);
-        soapHeader.addHeaderElement(new QName(ns, "keyClient")).setText(keyClient);
-    }
-
-    private PesquisarSolicitacaoRequest buildRequest(LocalDate dataInicial, LocalDate dataFinal) {
-        PesquisarSolicitacaoRequest request = new PesquisarSolicitacaoRequest();
-        request.getContent().add(createJAXBElement("dataInicial", convertToXMLGregorianCalendar(dataInicial)));
-        request.getContent().add(createJAXBElement("dataFinal", convertToXMLGregorianCalendar(dataFinal)));
-        request.getContent().add(createJAXBElement("registroInicial", 1));  // Valor fixo como exemplo
-        return request;
-    }
-
-    private <T> JAXBElement<T> createJAXBElement(String name, T value) {
-        String ns = "http://lemontech.com.br/selfbooking/wsselfbooking/services/request";
-        return new JAXBElement<>(new QName(ns, name), (Class<T>) value.getClass(), value);
     }
 
     private XMLGregorianCalendar convertToXMLGregorianCalendar(LocalDate localDate) {
         try {
-            GregorianCalendar calendar = GregorianCalendar.from(localDate.atStartOfDay(ZoneId.systemDefault()));
-            return DatatypeFactory.newInstance().newXMLGregorianCalendar(calendar);
+            GregorianCalendar gcal = GregorianCalendar.from(localDate.atStartOfDay(ZoneId.systemDefault()));
+            return DatatypeFactory.newInstance().newXMLGregorianCalendar(gcal);
         } catch (Exception e) {
-            logger.error("Erro ao converter LocalDate para XMLGregorianCalendar", e);
-            return null;
+            logger.error("Erro convertendo LocalDate para XMLGregorianCalendar: {}", e.getMessage(), e);
+            throw new RuntimeException("Falha na conversão de data.", e);
         }
     }
 }
