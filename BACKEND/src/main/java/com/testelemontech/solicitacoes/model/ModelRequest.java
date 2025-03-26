@@ -1,42 +1,44 @@
 package com.testelemontech.solicitacoes.model;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.CreationTimestamp;
+
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "DB_VIAGENS")  // Table name in the database
+@Table(name = "model_request")
 public class ModelRequest {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)  // Automatically generated ID
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "codigo_solicitacao", nullable = false)  // Ensuring it's not null in DB
+    @Column(nullable = false, unique = true)
     private String codigoSolicitacao;
 
-    @Column(name = "nome_passageiro", nullable = false)  // Ensuring it's not null in DB
+    @Column(nullable = false)
     private String nomePassageiro;
 
-    @Column(name = "cia_aerea")
+    @Column(nullable = false)
     private String ciaAerea;
 
-    @Column(name = "cidade_origem")
+    @Column(nullable = false)
     private String cidadeOrigem;
 
-    @Column(name = "cidade_destino")
+    @Column(nullable = false)
     private String cidadeDestino;
 
-    @Column(name = "data_hora_saida")
+    @Column(nullable = false)
     private LocalDateTime dataHoraSaida;
 
-    @Column(name = "data_hora_chegada")
+    @Column(nullable = false)
     private LocalDateTime dataHoraChegada;
 
-    @Column(name = "data_solicitacao", nullable = false)  // Ensuring it's not null in DB
+    @CreationTimestamp
+    @Column(updatable = false, nullable = false)
     private LocalDateTime dataSolicitacao;
 
-    // Getters and Setters
-
+    // Getters e Setters
     public Long getId() {
         return id;
     }
@@ -107,20 +109,5 @@ public class ModelRequest {
 
     public void setDataSolicitacao(LocalDateTime dataSolicitacao) {
         this.dataSolicitacao = dataSolicitacao;
-    }
-
-    @Override
-    public String toString() {
-        return "ModelRequest{" +
-                "id=" + id +
-                ", codigoSolicitacao='" + codigoSolicitacao + '\'' +
-                ", nomePassageiro='" + nomePassageiro + '\'' +
-                ", ciaAerea='" + ciaAerea + '\'' +
-                ", cidadeOrigem='" + cidadeOrigem + '\'' +
-                ", cidadeDestino='" + cidadeDestino + '\'' +
-                ", dataHoraSaida=" + dataHoraSaida +
-                ", dataHoraChegada=" + dataHoraChegada +
-                ", dataSolicitacao=" + dataSolicitacao +
-                '}';
     }
 }

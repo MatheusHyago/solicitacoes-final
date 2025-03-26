@@ -1,19 +1,27 @@
 package com.testelemontech.solicitacoes.config;
 
-import org.apache.http.impl.client.HttpClients;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.oxm.jaxb.Jaxb2Marshaller;
 import org.springframework.ws.client.core.WebServiceTemplate;
-import org.springframework.ws.transport.http.HttpComponentsMessageSender;
 
 @Configuration
 public class WsConfig {
 
     @Bean
-    public WebServiceTemplate webServiceTemplate() {
+    public Jaxb2Marshaller marshaller() {
+        Jaxb2Marshaller marshaller = new Jaxb2Marshaller();
+        // Adicione todos os pacotes necessários aqui
+        marshaller.setPackagesToScan("br.com.lemontech.selfbooking.wsselfbooking.beans",
+                "br.com.lemontech.selfbooking.wsselfbooking.services.request");
+        return marshaller;
+    }
+
+    @Bean
+    public WebServiceTemplate webServiceTemplate(Jaxb2Marshaller marshaller) {
         WebServiceTemplate webServiceTemplate = new WebServiceTemplate();
-        // Configurando o HttpClient para o envio SOAP
-        webServiceTemplate.setMessageSender(new HttpComponentsMessageSender(HttpClients.createDefault()));
+        webServiceTemplate.setMarshaller(marshaller);
+        webServiceTemplate.setUnmarshaller(marshaller);
         return webServiceTemplate;
     }
 }

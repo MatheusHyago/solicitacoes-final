@@ -1,57 +1,66 @@
 package com.testelemontech.solicitacoes.service;
 
-import com.testelemontech.solicitacoes.config.WsClient;
-import com.testelemontech.solicitacoes.model.ModelRequest;
-import com.testelemontech.solicitacoes.repository.ModelRequestRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
-
-import com.testelemontech.solicitacoes.wsdl.Solicitacao;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.testelemontech.solicitacoes.config.WsClient;
+import com.testelemontech.solicitacoes.model.ModelRequest;
+import com.testelemontech.solicitacoes.repository.ModelRequestRepository;
+import com.testelemontech.solicitacoes.wsdl.Solicitacao;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+/**
+ * Classe de serviço responsável por lidar com a lógica de negócios relacionada a solicitações.
+ */
 @Service
 public class ModelRequestService {
 
     private static final Logger logger = LoggerFactory.getLogger(ModelRequestService.class);
 
-    private final WsClient wsClient;
-    private final ModelRequestRepository repository;
+    @Autowired
+    private WsClient wsClient;
 
-    public ModelRequestService(com.testelemontech.solicitacoes.config.WsClient wsClient, ModelRequestRepository repository) {
-        this.wsClient = wsClient;
-        this.repository = repository;
-    }
+    @Autowired
+    private ModelRequestRepository modelRequestRepository;
 
-    public List<ModelRequest> getModelRequest() {
-        LocalDate endDate = LocalDate.now();
-        LocalDate startDate = endDate.minusMonths(3);
+    /**
+     * Recupera solicitações dos últimos três meses, salva no repositório
+     * e retorna a lista de solicitações.
+     *
+     * @return uma lista de solicitações dos últimos três meses.
+     */
+    public List<ModelRequest> getSolicitacoesUltimosTresMeses() {
+        // Define o intervalo de datas: de três meses atrás até a data atual
+        LocalDateTime dataFim = LocalDateTime.now();
+        LocalDateTime dataInicio = dataFim.minusMonths(3);
 
-        logger.info("Fetching travel requests from SOAP service between {} and {}", startDate, endDate);
-        List<Solicitacao> solicitacoesWS = wsClient.pesquisarSolicitacoes(startDate, endDate);
+        // Busca solicitações de uma API externa
+        List<Solicitacao> solicitacoesExternas = wsClient.buscarSolicitacoes(dataInicio.toLocalDate(), dataFim.toLocalDate());
 
-        List<ModelRequest> travelRequests = solicitacoesWS.stream()
-                .map(this::convertToTravelRequest)
+        // Converte a lista de Solicitacao para uma lista de ModelRequest
+        List<ModelRequest> solicitacoes = solicitacoesExternas.stream()
+                .map(this::convertSolicitacaoToModelRequest)
                 .collect(Collectors.toList());
 
-        if (!travelRequests.isEmpty()) {
-            repository.saveAll(travelRequests);
-            logger.info("Salva {} Requisições", getModelRequest().size());
+        // Salva as solicitações buscadas no repositório
+        if (!solicitacoes.isEmpty()) {
+            modelRequestRepository.saveAll(solicitacoes);
+            logger.info("Salvou com sucesso {} solicitações no repositório", solicitacoes.size());
         } else {
-            logger.warn("No travel requests found to save.");
+            logger.warn("Nenhuma solicitação encontrada para salvar");
         }
-        return travelRequests;
+
+        return solicitacoes;
     }
 
-    private ModelRequest convertToTravelRequest(Solicitacao solicitacao) {
-        ModelRequest travelRequest = new ModelRequest();
-
-        travelRequest.setCodigoSolicitacao(String.valueOf(solicitacao.getIdSolicitacao()));  // Correct setter
-        travelRequest.setNomePassageiro(solicitacao.getSolicitante() != null ? solicitacao.getSolicitante().getNome() : "Unknown"); // Correct setter
-        travelRequest.setDataSolicitacao(LocalDate.now().atStartOfDay());  // Assuming you're using LocalDateTime for dataSolicitacao
-
-        return travelRequest;
+    private ModelRequest convertSolicitacaoToModelRequest(Solicitacao solicitacao) {
+        ModelRequest modelRequest = new ModelRequest();
+        modelRequest.setCodigoSolicitacao(String.valueOf(solicitacao.getIdSolicitacao()));
+        // Adicione outros mapeamentos necessários aqui
+        return modelRequest;
     }
 }
