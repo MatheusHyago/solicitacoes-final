@@ -12,7 +12,7 @@ public class WsConfig {
     @Bean
     public Jaxb2Marshaller marshaller() {
         Jaxb2Marshaller marshaller = new Jaxb2Marshaller();
-        // Pacotes que o JAXB usará para gerar a marshalling
+        // Ajuste o pacote para corresponder ao pacote das classes geradas
         marshaller.setPackagesToScan("br.com.lemontech.selfbooking.wsselfbooking.beans",
                 "br.com.lemontech.selfbooking.wsselfbooking.services.request");
         return marshaller;
@@ -22,15 +22,10 @@ public class WsConfig {
     public WebServiceTemplate webServiceTemplate(Jaxb2Marshaller marshaller) {
         SaajSoapMessageFactory messageFactory = new SaajSoapMessageFactory();
         messageFactory.afterPropertiesSet();
+
         WebServiceTemplate webServiceTemplate = new WebServiceTemplate(messageFactory);
         webServiceTemplate.setMarshaller(marshaller);
         webServiceTemplate.setUnmarshaller(marshaller);
         return webServiceTemplate;
-    }
-
-    // Defina o bean para o WsSelfBookingService
-    @Bean
-    public WsSelfBookingService wsSelfBookingService() {
-        return new WsSelfBookingService();
     }
 }

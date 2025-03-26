@@ -1,8 +1,8 @@
 package com.testelemontech.solicitacoes.config;
 
+import br.com.lemontech.selfbooking.wsselfbooking.beans.Solicitacao;
 import br.com.lemontech.selfbooking.wsselfbooking.services.request.PesquisarSolicitacaoRequest;
 import br.com.lemontech.selfbooking.wsselfbooking.services.response.PesquisarSolicitacaoResponse;
-import br.com.lemontech.selfbooking.wsselfbooking.beans.Solicitacao;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -10,9 +10,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.ws.client.core.WebServiceTemplate;
 import org.springframework.ws.soap.client.core.SoapActionCallback;
 import org.springframework.ws.soap.saaj.SaajSoapMessage;
+
 import jakarta.xml.bind.JAXBElement;
-import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
+import javax.xml.datatype.DatatypeFactory;
 import javax.xml.namespace.QName;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -47,9 +48,8 @@ public class WsClient {
         try {
             logger.info("Iniciando requisição SOAP para o período {} a {}", dataInicio, dataFim);
 
-            // Criação da requisição com as datas de início e fim
             PesquisarSolicitacaoRequest request = criarRequest(dataInicio, dataFim);
-            logger.debug("Request SOAP criado: {}", request);
+            logger.info("Request SOAP criado.");
 
             // Enviando a requisição SOAP com os cabeçalhos
             PesquisarSolicitacaoResponse response = (PesquisarSolicitacaoResponse) webServiceTemplate.marshalSendAndReceive(
@@ -72,7 +72,6 @@ public class WsClient {
                     }
             );
 
-            // Processando a resposta e retornando a lista de solicitações
             if (response != null && response.getSolicitacao() != null) {
                 logger.info("Número de solicitações recebidas: {}", response.getSolicitacao().size());
                 return response.getSolicitacao();
@@ -88,15 +87,10 @@ public class WsClient {
 
     private PesquisarSolicitacaoRequest criarRequest(LocalDate dataInicio, LocalDate dataFim) {
         PesquisarSolicitacaoRequest request = new PesquisarSolicitacaoRequest();
-
-        // Convertendo LocalDate para XMLGregorianCalendar
         request.getContent().add(new JAXBElement<>(new QName(NAMESPACE, "dataInicial"), XMLGregorianCalendar.class, convertToXMLGregorianCalendar(dataInicio)));
         request.getContent().add(new JAXBElement<>(new QName(NAMESPACE, "dataFinal"), XMLGregorianCalendar.class, convertToXMLGregorianCalendar(dataFim)));
-
-        // Adicionando outros parâmetros
         request.getContent().add(new JAXBElement<>(new QName(NAMESPACE, "registroInicial"), Integer.class, 1));
         request.getContent().add(new JAXBElement<>(new QName(NAMESPACE, "quantidadeRegistros"), Integer.class, 50));
-
         return request;
     }
 

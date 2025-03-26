@@ -4,17 +4,17 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "DB_VIAGENS")  // Table name in the database
+@Table(name = "DB_VIAGENS")  // Tabela correspondente no banco de dados
 public class ModelRequest {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)  // Automatically generated ID
+    @GeneratedValue(strategy = GenerationType.IDENTITY)  // Gerar ID automaticamente
     private Long id;
 
-    @Column(name = "codigo_solicitacao", nullable = false)  // Ensuring it's not null in DB
+    @Column(name = "codigo_solicitacao", nullable = false)  // Coluna 'codigo_solicitacao' não pode ser nula
     private String codigoSolicitacao;
 
-    @Column(name = "nome_passageiro", nullable = false)  // Ensuring it's not null in DB
+    @Column(name = "nome_passageiro", nullable = false)  // Coluna 'nome_passageiro' não pode ser nula
     private String nomePassageiro;
 
     @Column(name = "cia_aerea")
@@ -32,7 +32,7 @@ public class ModelRequest {
     @Column(name = "data_hora_chegada")
     private LocalDateTime dataHoraChegada;
 
-    @Column(name = "data_solicitacao", nullable = false)  // Ensuring it's not null in DB
+    @Column(name = "data_solicitacao", nullable = false)  // Coluna 'data_solicitacao' não pode ser nula
     private LocalDateTime dataSolicitacao;
 
     // Getters and Setters
