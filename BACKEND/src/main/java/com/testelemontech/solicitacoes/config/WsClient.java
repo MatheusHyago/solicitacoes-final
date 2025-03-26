@@ -1,27 +1,21 @@
 package com.testelemontech.solicitacoes.config;
 
-import com.testelemontech.solicitacoes.wsdl.PesquisarSolicitacaoRequest;
-import com.testelemontech.solicitacoes.wsdl.PesquisarSolicitacaoResponse;
-import com.testelemontech.solicitacoes.wsdl.Solicitacao;
-
-
-
-
+import br.com.lemontech.selfbooking.wsselfbooking.services.request.PesquisarSolicitacaoRequest;
+import br.com.lemontech.selfbooking.wsselfbooking.services.response.PesquisarSolicitacaoResponse;
+import br.com.lemontech.selfbooking.wsselfbooking.beans.Solicitacao;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.ws.WebServiceMessage;
-import org.springframework.ws.client.core.WebServiceMessageCallback;
 import org.springframework.ws.client.core.WebServiceTemplate;
-import org.springframework.ws.soap.SoapHeader;
-import org.springframework.ws.soap.SoapMessage;
+import org.springframework.ws.soap.SoapHeaderElement;
+import org.springframework.ws.soap.client.core.SoapActionCallback;
+import org.springframework.ws.soap.saaj.SaajSoapMessageFactory;
 
-import jakarta.xml.bind.JAXBElement;  // Usando jakarta.xml.bind
+import jakarta.xml.bind.JAXBElement;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
 import javax.xml.namespace.QName;
-import java.io.IOException;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.GregorianCalendar;
@@ -32,7 +26,6 @@ public class WsClient {
 
     private static final Logger logger = LoggerFactory.getLogger(WsClient.class);
 
-    // Namespace conforme o WSDL – ajuste se necessário.
     private static final String NAMESPACE = "http://lemontech.com.br/selfbooking/wsselfbooking/services";
 
     @Value("${soap.wsdlUrl}")
@@ -53,51 +46,78 @@ public class WsClient {
         this.webServiceTemplate = webServiceTemplate;
     }
 
-    /**
-     * Realiza a chamada SOAP para buscar as solicitações entre duas datas.
-     *
-     * @param dataInicio Data inicial da pesquisa.
-     * @param dataFim    Data final da pesquisa.
-     * @return Lista de objetos Solicitacao retornados no response.
-     */
     public List<Solicitacao> pesquisarSolicitacoes(LocalDate dataInicio, LocalDate dataFim) {
         try {
             logger.info("Preparando requisição SOAP para o período {} a {}", dataInicio, dataFim);
 
-            // Cria e configura o request
-            PesquisarSolicitacaoRequest request = new PesquisarSolicitacaoRequest();
+            if (keyClient == null || username == null || password == null) {
+                logger.error("As variáveis de configuração não podem ser nulas. keyClient: {}, username: {}, password: {}",
+                        keyClient, username, password);
+                throw new IllegalArgumentException("As variáveis de configuração não podem ser nulas.");
+            }
 
-            // Adicionando os campos na lista content usando Jakarta JAXB
+            PesquisarSolicitacaoRequest request = new PesquisarSolicitacaoRequest();
             request.getContent().add(new JAXBElement<>(new QName(NAMESPACE, "dataInicial"), XMLGregorianCalendar.class, convertToXMLGregorianCalendar(dataInicio)));
             request.getContent().add(new JAXBElement<>(new QName(NAMESPACE, "dataFinal"), XMLGregorianCalendar.class, convertToXMLGregorianCalendar(dataFim)));
             request.getContent().add(new JAXBElement<>(new QName(NAMESPACE, "registroInicial"), Integer.class, 1));
             request.getContent().add(new JAXBElement<>(new QName(NAMESPACE, "quantidadeRegistros"), Integer.class, 50));
 
-            // Callback para injetar os headers SOAP
-            WebServiceMessageCallback callback = new WebServiceMessageCallback() {
-                @Override
-                public void doWithMessage(WebServiceMessage message) throws IOException {
-                    if (message instanceof SoapMessage) {
-                        SoapMessage soapMessage = (SoapMessage) message;
-                        SoapHeader header = soapMessage.getSoapHeader();
-                        header.addHeaderElement(new QName(NAMESPACE, "userName")).setText(username);
-                        header.addHeaderElement(new QName(NAMESPACE, "userPassword")).setText(password);
-                        header.addHeaderElement(new QName(NAMESPACE, "keyClient")).setText(keyClient);
-                        logger.info("Headers SOAP adicionados.");
-                    }
+            logger.info("Request SOAP criado: {}", request);
+
+            JAXBElement<PesquisarSolicitacaoRequest> requestElement = new JAXBElement<>(
+                    new QName(NAMESPACE, "PesquisarSolicitacaoRequest"),
+                    PesquisarSolicitacaoRequest.class,
+                    request
+            );
+
+            SaajSoapMessageFactory messageFactory = new SaajSoapMessageFactory();
+            messageFactory.afterPropertiesSet();
+
+            PesquisarSolicitacaoResponse response = (PesquisarSolicitacaoResponse) webServiceTemplate.marshalSendAndReceive(
+                    wsdlUrl.trim(), requestElement, new SoapActionCallback("") {
+                        @Override
+                        public void doWithMessage(org.springframework.ws.WebServiceMessage message) {
+                            try {
+                                super.doWithMessage(message);
+                                org.springframework.ws.soap.saaj.SaajSoapMessage saajSoapMessage = (org.springframework.ws.soap.saaj.SaajSoapMessage) message;
+                                org.w3c.dom.Document document = saajSoapMessage.getSaajMessage().getSOAPPart().getEnvelope().getOwnerDocument();
+
+                                SoapHeaderElement passwordHeader = saajSoapMessage.getSoapHeader().addHeaderElement(new QName(NAMESPACE, "userPassword"));
+                                passwordHeader.setText(password);
+
+                                SoapHeaderElement usernameHeader = saajSoapMessage.getSoapHeader().addHeaderElement(new QName(NAMESPACE, "userName"));
+                                usernameHeader.setText(username);
+
+                                SoapHeaderElement keyClientHeader = saajSoapMessage.getSoapHeader().addHeaderElement(new QName(NAMESPACE, "keyClient"));
+                                keyClientHeader.setText(keyClient);
+                            } catch (Exception e) {
+                                logger.error("Erro ao adicionar cabeçalho SOAP", e);
+                                throw new RuntimeException("Erro ao adicionar cabeçalho SOAP", e);
+                            }
+                        }
+                    });
+
+            logger.info("Resposta SOAP recebida com sucesso: {}", response);
+
+            if (response != null && response.getSolicitacao() != null) {
+                logger.info("Número de solicitações recebidas: {}", response.getSolicitacao().size());
+                for (Solicitacao sol : response.getSolicitacao()) {
+                    logger.info("Solicitação ID: {}, Local de Venda: {}, Data Criação: {}",
+                            sol.getIdSolicitacao(), sol.getLocalVenda(), sol.getDataCriacaoSv());
                 }
-            };
-
-            logger.info("Enviando requisição SOAP para {}", wsdlUrl);
-            PesquisarSolicitacaoResponse response = (PesquisarSolicitacaoResponse)
-                    webServiceTemplate.marshalSendAndReceive(wsdlUrl, request, callback);
-
-            logger.info("Resposta SOAP recebida com sucesso.");
-            return response.getSolicitacao();
+                return response.getSolicitacao();
+            } else {
+                logger.warn("A resposta SOAP está nula ou não contém solicitações.");
+                return List.of();
+            }
         } catch (Exception e) {
             logger.error("Erro na chamada SOAP: {}", e.getMessage(), e);
             throw new RuntimeException("Erro ao buscar solicitações via SOAP.", e);
         }
+    }
+
+    public List<Solicitacao> buscarSolicitacoes(LocalDate dataInicio, LocalDate dataFim) {
+        return pesquisarSolicitacoes(dataInicio, dataFim);
     }
 
     private XMLGregorianCalendar convertToXMLGregorianCalendar(LocalDate localDate) {

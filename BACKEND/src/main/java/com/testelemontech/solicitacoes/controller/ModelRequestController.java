@@ -14,7 +14,7 @@ import java.util.List;
  * - GET /sincronizar: Sincroniza solicitações do WebService e salva no banco.
  */
 @RestController
-@RequestMapping("solicitacoes")
+@RequestMapping("/solicitacoes")
 public class ModelRequestController {
 
     private final ModelRequestService service;

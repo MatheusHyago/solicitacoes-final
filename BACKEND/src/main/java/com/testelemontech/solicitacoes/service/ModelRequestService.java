@@ -7,7 +7,7 @@ import java.util.stream.Collectors;
 import com.testelemontech.solicitacoes.config.WsClient;
 import com.testelemontech.solicitacoes.model.ModelRequest;
 import com.testelemontech.solicitacoes.repository.ModelRequestRepository;
-import com.testelemontech.solicitacoes.wsdl.Solicitacao;
+import br.com.lemontech.selfbooking.wsselfbooking.beans.Solicitacao;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
