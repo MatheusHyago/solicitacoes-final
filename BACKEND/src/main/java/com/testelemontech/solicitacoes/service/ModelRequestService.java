@@ -34,33 +34,43 @@ public class ModelRequestService {
      * @return uma lista de solicitações dos últimos três meses.
      */
     public List<ModelRequest> getSolicitacoesUltimosTresMeses() {
-        // Define o intervalo de datas: de três meses atrás até a data atual
-        LocalDateTime dataFim = LocalDateTime.now();
-        LocalDateTime dataInicio = dataFim.minusMonths(3);
+        try {
+            // Define o intervalo de datas: de três meses atrás até a data atual
+            LocalDateTime dataFim = LocalDateTime.now();
+            LocalDateTime dataInicio = dataFim.minusMonths(3);
 
-        // Busca solicitações de uma API externa
-        List<Solicitacao> solicitacoesExternas = wsClient.buscarSolicitacoes(dataInicio.toLocalDate(), dataFim.toLocalDate());
+            // Busca solicitações de uma API externa
+            // Use o método correto da WsClient
+            List<Solicitacao> solicitacoesExternas = wsClient.pesquisarSolicitacoes(dataInicio.toLocalDate(), dataFim.toLocalDate());
 
-        // Converte a lista de Solicitacao para uma lista de ModelRequest
-        List<ModelRequest> solicitacoes = solicitacoesExternas.stream()
-                .map(this::convertSolicitacaoToModelRequest)
-                .collect(Collectors.toList());
+            if (solicitacoesExternas == null || solicitacoesExternas.isEmpty()) {
+                logger.warn("Nenhuma solicitação recebida da API externa.");
+                return List.of();  // Retorna uma lista vazia caso não haja solicitações
+            }
 
-        // Salva as solicitações buscadas no repositório
-        if (!solicitacoes.isEmpty()) {
+            // Converte a lista de Solicitacao para uma lista de ModelRequest
+            List<ModelRequest> solicitacoes = solicitacoesExternas.stream()
+                    .map(this::convertSolicitacaoToModelRequest)
+                    .collect(Collectors.toList());
+
+            // Salva as solicitações buscadas no repositório
             modelRequestRepository.saveAll(solicitacoes);
             logger.info("Salvou com sucesso {} solicitações no repositório", solicitacoes.size());
-        } else {
-            logger.warn("Nenhuma solicitação encontrada para salvar");
-        }
 
-        return solicitacoes;
+            return solicitacoes;
+
+        } catch (Exception e) {
+            logger.error("Erro ao recuperar ou salvar solicitações: {}", e.getMessage(), e);
+            throw new RuntimeException("Erro ao recuperar solicitações.", e);  // Exceção personalizada
+        }
     }
 
     private ModelRequest convertSolicitacaoToModelRequest(Solicitacao solicitacao) {
+        // Conversão da Solicitacao para ModelRequest
         ModelRequest modelRequest = new ModelRequest();
         modelRequest.setCodigoSolicitacao(String.valueOf(solicitacao.getIdSolicitacao()));
         // Adicione outros mapeamentos necessários aqui
+
         return modelRequest;
     }
 }
